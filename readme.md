@@ -34,3 +34,8 @@ type_of_signal: close
 connector_secret: abc123
 pair: ICP-USDT-SWAP
 ```
+
+## Credits
+
+* [Vitaliy Klychkov](https://github.com/vitassuper) - the greatest financial wheeler-dealer
+* [Mykola Symon](https://github.com/andinoriel) - compote manufacturer
