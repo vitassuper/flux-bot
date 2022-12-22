@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  stoch3com-bot:
+  trading_view_connector:
     build:
       context: ./
     network_mode: "host"
