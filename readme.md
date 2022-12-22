@@ -37,5 +37,5 @@ pair: ICP-USDT-SWAP
 
 ## Credits
 
-* [Vitaliy Klychkov](https://github.com/vitassuper) - the greatest financial wheeler-dealer
-* [Mykola Symon](https://github.com/andinoriel) - compote manufacturer
+- [Vitaliy Klychkov](https://github.com/vitassuper) - the greatest financial wheeler-dealer
+- [Mykola Symon](https://github.com/andinoriel) - compote manufacturer
