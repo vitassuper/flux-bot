@@ -64,7 +64,7 @@ class Connector:
 
         open_position = next((p for p in positions if  p['info']['instId'] == pair), None)
 
-        if(not open_position):
+        if(open_position):
             send_notification(f"Can't open new position, position already exists pair: {pair}")
 
             return
