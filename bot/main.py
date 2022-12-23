@@ -137,7 +137,7 @@ def handle(request):
         result = ""
 
         for item in positions:
-            result += f"symbol: {item['symbol']}, entryPrice: {item['entryPrice']}, unrealizedPnl: {item['unrealizedPnl']}, liquidationPrice: {item['liquidationPrice']}\n"
+            result += f"symbol: {item['symbol']}, entryPrice: {item['entryPrice']}, unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%), liquidationPrice: {item['liquidationPrice']} Pos size: {item['info']['notionalUsd']}💰\n"
 
         send_notification(result, chatId)
 
