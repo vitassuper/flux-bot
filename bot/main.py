@@ -58,6 +58,17 @@ class Connector:
         return positions
 
     def open_short_position(self, pair, amount, leverage = 20):
+        send_notification(f"Received signal type: open, pair: {pair}, amount: {amount}")
+
+        positions = self.okx.fetch_positions()
+
+        open_position = next((p for p in positions if  p['info']['instId'] == pair), None)
+
+        if(not open_position):
+            send_notification(f"Can't open new position, position already exists pair: {pair}")
+
+            return
+
         quantity = self.convert_quote_to_contracts(pair, amount)
 
         self.okx.set_leverage(leverage=leverage, symbol=pair, params = {
@@ -75,6 +86,8 @@ class Connector:
         })
 
     def add_to_short_position(self, pair, amount):
+        send_notification(f"Received signal type: add, pair: {pair}, amount: {amount}")
+
         positions = self.okx.fetch_positions()
 
         open_position = [p for p in positions if p['info']['instId'] == pair]
@@ -93,13 +106,28 @@ class Connector:
         
 
     def close_short_position(self, pair):
-        pos = self.okx.fetch_position(pair)
-        amount = int(pos['contracts'])
+        send_notification(f"Received signal type: close, pair: {pair}")
 
-        order = self.okx.create_order(symbol=pair, side = 'buy', type='market', amount=amount, params = { 
+        positions = self.okx.fetch_positions()
+
+        open_position = next((p for p in positions if  p['info']['instId'] == pair), None)
+
+        if(not open_position):
+            send_notification(f"Can't close position, position not exists pair: {pair}")
+
+            return
+
+        order = self.okx.create_order(symbol=pair, side = 'buy', type='market', amount=int(open_position['contracts']), params = { 
             'posSide': 'short',
             'tdMode': 'isolated',
         })
+
+        id = order['id']
+
+        result = self.okx.fetch_order(id, symbol=pair)
+
+        send_notification(f"PNL:{result['info']['pnl']} Symbol:{result['symbol']} size: {result['info']['fillSz']}")
+        
 
 configEnv = Config()
 
@@ -121,15 +149,12 @@ def handle(request):
 
     if(type_of_signal == 'open'):
         connector.open_short_position(pair=pair, amount=amount)
-        send_notification(f"Received signal type: {type_of_signal}, pair: {pair}, amount: {amount}")
 
     if(type_of_signal == 'add'):
         connector.add_to_short_position(pair=pair, amount=amount)
-        send_notification(f"Received signal type: {type_of_signal}, pair: {pair}, amount: {amount}")
 
     if(type_of_signal == 'close'):
         connector.close_short_position(pair=pair)
-        send_notification(f"Received signal type: close, pair: {pair}, amount: {amount}")
 
     if(type_of_signal == 'check'):
         positions = connector.get_open_positions()
