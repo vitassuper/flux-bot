@@ -52,6 +52,11 @@ class Connector:
 
         return int(amount / price / market['contractSize'])
 
+    def get_open_positions(self):
+        positions = self.okx.fetch_positions()
+
+        return positions
+
     def open_short_position(self, pair, amount, leverage = 20):
         quantity = self.convert_quote_to_contracts(pair, amount)
 
@@ -70,6 +75,15 @@ class Connector:
         })
 
     def add_to_short_position(self, pair, amount):
+        positions = self.okx.fetch_positions()
+
+        open_position = [p for p in positions if p['info']['instId'] == pair]
+
+        if(len(open_position) == 0):
+            send_notification(f"Can't average position, position not exists pair: {pair}")
+
+            return
+
         quantity = self.convert_quote_to_contracts(pair, amount)
 
         order = self.okx.create_order(symbol=pair, side = 'sell', type='market', amount=quantity, params = {
@@ -116,6 +130,16 @@ def handle(request):
     if(type_of_signal == 'close'):
         connector.close_short_position(pair=pair)
         send_notification(f"Received signal type: close, pair: {pair}, amount: {amount}")
+
+    if(type_of_signal == 'check'):
+        positions = connector.get_open_positions()
+        chatId = request.json_body.get('chat_id', '')
+        result = ""
+
+        for item in positions:
+            result += f"symbol: {item['symbol']}, entryPrice: {item['entryPrice']}, unrealizedPnl: {item['unrealizedPnl']}, liquidationPrice: {item['liquidationPrice']}\n"
+
+        send_notification(result, chatId)
 
     return {}
 

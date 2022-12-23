@@ -11,7 +11,7 @@ python = ">=3.8,<3.11"
 python-dotenv = "^0.21.0"
 pyramid = "^2.0"
 python-telegram-bot = "^13.14"
-ccxt = "^2.0.90"
+ccxt = "^2.4"
 
 [build-system]
 requires = ["poetry-core"]
