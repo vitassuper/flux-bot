@@ -7,6 +7,8 @@ from pyramid.response import Response
 from pyramid.view import view_config
 from .notificator import send_notification
 import ccxt
+import traceback
+import logging
 
 
 class Config:
@@ -50,10 +52,10 @@ class Connector:
 
         return int(amount / price / market['contractSize'])
 
-    def open_short_position(self, pair, amount):
+    def open_short_position(self, pair, amount, leverage = 20):
         quantity = self.convert_quote_to_contracts(pair, amount)
 
-        self.okx.set_leverage(leverage=8, symbol=pair, params = {
+        self.okx.set_leverage(leverage=leverage, symbol=pair, params = {
             'mgnMode': 'isolated',
             'posSide': 'short'
         })
@@ -63,7 +65,7 @@ class Connector:
             'tdMode': 'isolated',
         })
 
-        self.okx.add_margin(symbol=pair, amount=0.6, params={
+        self.okx.add_margin(symbol=pair, amount=0.5, params={
             'posSide': 'short'
         })
 
@@ -104,23 +106,28 @@ def handle(request):
         return {}
 
     if(type_of_signal == 'open'):
+        connector.open_short_position(pair=pair, amount=amount)
         send_notification(f"Received signal type: {type_of_signal}, pair: {pair}, amount: {amount}")
-        # connector.open_short_position(pair=pair, amount=amount)
 
     if(type_of_signal == 'add'):
-         send_notification(f"Received signal type: {type_of_signal}, pair: {pair}, amount: {amount}")
-        # connector.add_to_short_position(pair=pair, amount=amount)
+        connector.add_to_short_position(pair=pair, amount=amount)
+        send_notification(f"Received signal type: {type_of_signal}, pair: {pair}, amount: {amount}")
 
     if(type_of_signal == 'close'):
-         send_notification(f"Received signal type: close, pair: {pair}, amount: {amount}")
-        # connector.close_short_position(pair=pair)
+        connector.close_short_position(pair=pair)
+        send_notification(f"Received signal type: close, pair: {pair}, amount: {amount}")
 
     return {}
 
 def main():
-    with Configurator() as config:
-        config.add_route('handler', '/')
-        config.scan()
-        app = config.make_wsgi_app()
-    server = make_server('0.0.0.0', 80, app)
-    server.serve_forever()
+    logging.basicConfig(filename="std.log", format='%(asctime)s %(message)s', level=logging.ERROR)
+    try:
+        with Configurator() as config:
+            config.add_route('handler', '/')
+            config.scan()
+            app = config.make_wsgi_app()
+        server = make_server('0.0.0.0', 80, app)
+        server.serve_forever()
+    except Exception as e:
+        logging.error(traceback.format_exc())
+        exit(1)
