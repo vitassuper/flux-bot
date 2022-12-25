@@ -1,39 +1,20 @@
-import os
-from dotenv import load_dotenv
-
 from wsgiref.simple_server import make_server
 from pyramid.config import Configurator
 from pyramid.response import Response
 from pyramid.view import view_config
-from .notificator import send_notification
+
+from bot.settings import Config
+from bot.notificator import Notificator
 import ccxt
 import traceback
 import logging
 
-
-class Config:
-    def __init__(self):
-        self.connector_secret = ''
-        self.apiKey = ''
-        self.apiSecret = ''
-        self.safety_margin = 0
-        
-        self.load_config()
-
-    def load_config(self):
-        load_dotenv()
-
-        self.connector_secret = os.environ['CONNECTOR_SECRET']
-        self.apiKey = os.environ['API_KEY']
-        self.apiSecret = os.environ['API_SECRET']
-        self.safety_margin = os.environ['SAFETY_MARGIN']
-    
-    def validate_connector_secret(self, secret):
-        return self.connector_secret == secret
-
 class Connector:
     def __init__(self):
         configEnv = Config()
+
+        self.config = configEnv
+        self.notificator = Notificator()
 
         self.okx = ccxt.okex({
         'apiKey': configEnv.apiKey,
@@ -52,24 +33,34 @@ class Connector:
 
         return int(amount / price / market['contractSize'])
 
-    def get_open_positions(self):
+    def check_open_positions(self, chatId):
         positions = self.okx.fetch_positions()
 
-        return positions
+        result = ""
 
-    def open_short_position(self, pair, amount, leverage = 20):
-        send_notification(f"Received signal type: open, pair: {pair}, amount: {amount}")
+        for item in positions:
+            result += f"{item['info']['instId']}, entryPrice: {item['entryPrice']}, avgPrice:{item['info']['avgPx']} unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%), liquidationPrice: {item['liquidationPrice']} Pos size: {item['info']['notionalUsd']}💰\n"
+
+        self.notificator.send_notification(result, chatId)
+
+    def open_short_position(self, pair, amount, leverage = 20, margin = None):
+        self.notificator.send_notification(f"Received signal type: open, pair: {pair}, amount: {amount}")
 
         positions = self.okx.fetch_positions()
 
         open_position = next((p for p in positions if  p['info']['instId'] == pair), None)
 
         if(open_position):
-            send_notification(f"Can't open new position, position already exists pair: {pair}")
+            self.notificator.send_warning_notification(f"Can't open new position, position already exists pair: {pair}")
 
             return
 
         quantity = self.convert_quote_to_contracts(pair, amount)
+
+        if(quantity == 0):
+            self.notificator.send_warning_notification(f"Can't open new position, low amount for pair: {pair}")
+
+            return
 
         self.okx.set_leverage(leverage=leverage, symbol=pair, params = {
             'mgnMode': 'isolated',
@@ -81,23 +72,28 @@ class Connector:
             'tdMode': 'isolated',
         })
 
-        self.okx.add_margin(symbol=pair, amount=0.5, params={
+        self.okx.add_margin(symbol=pair, amount=0.2, params={
             'posSide': 'short'
         })
 
     def add_to_short_position(self, pair, amount):
-        send_notification(f"Received signal type: add, pair: {pair}, amount: {amount}")
+        self.notificator.send_notification(f"Received signal type: add, pair: {pair}, amount: {amount}")
 
         positions = self.okx.fetch_positions()
 
         open_position = [p for p in positions if p['info']['instId'] == pair]
 
         if(len(open_position) == 0):
-            send_notification(f"Can't average position, position not exists pair: {pair}")
+            self.notificator.send_warning_notification(f"Can't average position, position not exists pair: {pair}")
 
             return
 
         quantity = self.convert_quote_to_contracts(pair, amount)
+
+        if(quantity == 0):
+            self.notificator.send_warning_notification(f"Can't average position, low amount for pair: {pair}")
+
+            return
 
         order = self.okx.create_order(symbol=pair, side = 'sell', type='market', amount=quantity, params = {
             'posSide': 'short',
@@ -106,14 +102,14 @@ class Connector:
         
 
     def close_short_position(self, pair):
-        send_notification(f"Received signal type: close, pair: {pair}")
+        self.notificator.send_notification(f"Received signal type: close, pair: {pair}")
 
         positions = self.okx.fetch_positions()
 
         open_position = next((p for p in positions if  p['info']['instId'] == pair), None)
 
         if(not open_position):
-            send_notification(f"Can't close position, position not exists pair: {pair}")
+            self.notificator.send_warning_notification(f"Can't close position, position not exists pair: {pair}")
 
             return
 
@@ -126,7 +122,7 @@ class Connector:
 
         result = self.okx.fetch_order(id, symbol=pair)
 
-        send_notification(f"PNL:{result['info']['pnl']} Symbol:{result['symbol']} size: {result['info']['fillSz']}")
+        self.notificator.send_notification(f"PNL:{result['info']['pnl']} Symbol:{result['symbol']} size: {result['info']['fillSz']}")
         
 
 configEnv = Config()
@@ -147,8 +143,10 @@ def handle(request):
         
         return {}
 
-    if(type_of_signal == 'open'):
-        connector.open_short_position(pair=pair, amount=amount)
+    if(type_of_signal == 'open'):     
+        margin_amount = request.json_body.get('margin_amount', None)
+
+        connector.open_short_position(pair=pair, amount=amount, leverage=20, margin=margin_amount)
 
     if(type_of_signal == 'add'):
         connector.add_to_short_position(pair=pair, amount=amount)
@@ -157,14 +155,8 @@ def handle(request):
         connector.close_short_position(pair=pair)
 
     if(type_of_signal == 'check'):
-        positions = connector.get_open_positions()
         chatId = request.json_body.get('chat_id', '')
-        result = ""
-
-        for item in positions:
-            result += f"symbol: {item['symbol']}, entryPrice: {item['entryPrice']}, unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%), liquidationPrice: {item['liquidationPrice']} Pos size: {item['info']['notionalUsd']}💰\n"
-
-        send_notification(result, chatId)
+        connector.check_open_positions(chatId)
 
     return {}
 
