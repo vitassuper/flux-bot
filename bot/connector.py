@@ -54,7 +54,7 @@ class Connector:
         result = ""
 
         for item in positions:
-            result += f"{item['info']['instId']}, entryPrice: {item['entryPrice']}, avgPrice:{item['info']['avgPx']} unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%), liquidationPrice: {item['liquidationPrice']} Pos size: {item['info']['notionalUsd']}💰\n"
+            result += f"{item['info']['instId']}, margin: {item['info']['margin']} entryPrice: {item['entryPrice']}, avgPrice:{item['info']['avgPx']} unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%), liquidationPrice: {item['liquidationPrice']} Pos size: {item['info']['notionalUsd']}💰\n"
 
         return result
 

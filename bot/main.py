@@ -41,7 +41,7 @@ def handle(request):
 
     if(type_of_signal == 'check'):
         chatId = request.json_body.get('chat_id', '')
-        connector.check_open_positions(chatId)
+        connector.get_open_positions()
 
     return {}
 
