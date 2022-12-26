@@ -1,3 +1,3 @@
-from bot.models.deals import Deal
+from bot.models.deals import Deals
 
-Deal.create_table()
+Deals.create_table()
