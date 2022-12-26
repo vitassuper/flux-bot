@@ -36,6 +36,11 @@ class Connector:
         deal = Deals.get(Deals.exchangeId == posId, Deals.date_close.is_null())
         deal.safety_order_count = deal.safety_order_count + 1
         deal.save()
+    
+    def db_get_deal(self, posId):
+        deal = Deals.get(Deals.exchangeId == posId, Deals.date_close.is_null())
+
+        return deal
 
     def convert_quote_to_contracts(self, symbol, amount):
         market = self.okx.market(symbol)
@@ -117,6 +122,10 @@ class Connector:
         })
 
         self.db_add_safety_order(open_position['info']['posId'])
+
+        deal = self.db_get_deal(open_position['info']['posId'])
+
+        self.notificator.send_notification(f"Averaged position ({deal.safety_order_count})")
         
 
     def close_short_position(self, pair):
