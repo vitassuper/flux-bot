@@ -1,8 +1,11 @@
+import ccxt
+
+from datetime import datetime
+
 from bot.models.deals import Deals
 from bot.notificator import Notificator
 from bot.settings import Config
-from datetime import datetime
-import ccxt
+
 
 class Connector:
     def __init__(self):
@@ -24,7 +27,7 @@ class Connector:
 
     def db_add_new_deal(self, pair, posId, date_open):
         deal = Deals(pair = pair, exchangeId = posId, date_open = date_open)
-        deal.save() 
+        deal.save()
 
     def db_close_deal(self, posId, pnl, timestamp):
         deal = Deals.get(Deals.exchangeId == posId, Deals.date_close.is_null())
@@ -36,7 +39,7 @@ class Connector:
         deal = Deals.get(Deals.exchangeId == posId, Deals.date_close.is_null())
         deal.safety_order_count = deal.safety_order_count + 1
         deal.save()
-    
+
     def db_get_deal(self, posId):
         deal = Deals.get(Deals.exchangeId == posId, Deals.date_close.is_null())
 
@@ -52,9 +55,16 @@ class Connector:
         positions = self.okx.fetch_positions()
 
         result = ""
-
         for item in positions:
-            result += f"{item['info']['instId']}, margin: {item['info']['margin']} entryPrice: {item['entryPrice']}, avgPrice:{item['info']['avgPx']} unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%), liquidationPrice: {item['liquidationPrice']} Pos size: {item['info']['notionalUsd']}💰\n"
+            result += f'''
+            {item['info']['instId']},
+            margin: {item['info']['margin']}
+            entryPrice: {item['entryPrice']}
+            avgPrice: {item['info']['avgPx']}
+            unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%)
+            liquidationPrice: {item['liquidationPrice']}
+            Pos size: {item['info']['notionalUsd']}💰
+            '''
 
         return result
 
@@ -81,7 +91,7 @@ class Connector:
             'mgnMode': 'isolated',
             'posSide': 'short'
         })
-        
+
         order = self.okx.create_order(symbol=pair, side = 'sell', type='market', amount=quantity, params = {
             'posSide': 'short',
             'tdMode': 'isolated',
@@ -126,7 +136,6 @@ class Connector:
         deal = self.db_get_deal(open_position['info']['posId'])
 
         self.notificator.send_notification(f"Averaged position ({deal.safety_order_count})")
-        
 
     def close_short_position(self, pair):
         self.notificator.send_notification(f"Received signal type: close, pair: {pair}")
@@ -140,7 +149,7 @@ class Connector:
 
             return
 
-        order = self.okx.create_order(symbol=pair, side = 'buy', type='market', amount=int(open_position['contracts']), params = { 
+        order = self.okx.create_order(symbol=pair, side = 'buy', type='market', amount=int(open_position['contracts']), params = {
             'posSide': 'short',
             'tdMode': 'isolated',
         })
@@ -152,4 +161,3 @@ class Connector:
         self.db_close_deal(open_position['info']['posId'], result['info']['pnl'], result['timestamp'])
 
         self.notificator.send_notification(f"PNL:{result['info']['pnl']} Symbol:{result['symbol']} size: {result['info']['fillSz']}")
-        

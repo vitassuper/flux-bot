@@ -1,6 +1,8 @@
 from peewee import SqliteDatabase, Model, CharField, TimestampField, DecimalField, SmallIntegerField
 
+
 db = SqliteDatabase('connector.db')
+
 
 class Deals(Model):
     pair = CharField(max_length=255)
