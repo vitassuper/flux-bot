@@ -63,7 +63,7 @@ class Connector:
                 f"avgPrice: {item['info']['avgPx']}\n"
                 f"unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%)\n"
                 f"liquidationPrice: {item['liquidationPrice']}\n"
-                f"Pos size: {item['info']['notionalUsd']}💰\n"
+                f"Pos size: {item['info']['notionalUsd']}💰\n\n"
             )
 
         return result
