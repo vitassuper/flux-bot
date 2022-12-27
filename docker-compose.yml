@@ -2,9 +2,11 @@ version: "3"
 
 services:
   trading_view_connector:
+    container_name: trading_view_connector
     build:
       context: ./
     network_mode: "host"
     restart: always
     volumes:
       - .:/app
+      - /app/.venv
