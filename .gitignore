@@ -3,7 +3,6 @@
 .dockerignore
 .gitignore
 .env
-std.log
 
 .idea
 .vscode
@@ -27,3 +26,5 @@ venv
 
 .vscode
 .idea
+
+std.log
