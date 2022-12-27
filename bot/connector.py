@@ -15,18 +15,18 @@ class Connector:
         self.notificator = Notificator()
 
         self.okx = ccxt.okex({
-        'apiKey': configEnv.apiKey,
-        'secret': configEnv.apiSecret,
-        'password': "That's1Me",
-        'options': {
-            'defaultType': 'swap',
+            'apiKey': configEnv.apiKey,
+            'secret': configEnv.apiSecret,
+            'password': "That's1Me",
+            'options': {
+                'defaultType': 'swap',
             },
         })
 
         self.okx.load_markets()
 
     def db_add_new_deal(self, pair, posId, date_open):
-        deal = Deals(pair = pair, exchangeId = posId, date_open = date_open)
+        deal = Deals(pair=pair, exchangeId=posId, date_open=date_open)
         deal.save()
 
     def db_close_deal(self, posId, pnl, timestamp):
@@ -56,77 +56,87 @@ class Connector:
 
         result = ""
         for item in positions:
-            result += f'''
-            {item['info']['instId']},
-            margin: {item['info']['margin']}
-            entryPrice: {item['entryPrice']}
-            avgPrice: {item['info']['avgPx']}
-            unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%)
-            liquidationPrice: {item['liquidationPrice']}
-            Pos size: {item['info']['notionalUsd']}💰
-            '''
+            result += (
+                f"{item['info']['instId']}\n"
+                f"margin: {item['info']['margin']}\n"
+                f"entryPrice: {item['entryPrice']}\n"
+                f"avgPrice: {item['info']['avgPx']}\n"
+                f"unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%)\n"
+                f"liquidationPrice: {item['liquidationPrice']}\n"
+                f"Pos size: {item['info']['notionalUsd']}💰"
+            )
 
         return result
 
-    def open_short_position(self, pair, amount, leverage = 20, margin = None):
-        self.notificator.send_notification(f"Received signal type: open, pair: {pair}, amount: {amount}")
+    def open_short_position(self, pair, amount, leverage=20, margin=None):
+        self.notificator.send_notification(
+            f"Received signal type: open, pair: {pair}, amount: {amount}")
 
         positions = self.okx.fetch_positions()
 
-        open_position = next((p for p in positions if  p['info']['instId'] == pair), None)
+        open_position = next(
+            (p for p in positions if p['info']['instId'] == pair), None)
 
-        if(open_position):
-            self.notificator.send_warning_notification(f"Can't open new position, position already exists pair: {pair}")
+        if (open_position):
+            self.notificator.send_warning_notification(
+                f"Can't open new position, position already exists pair: {pair}")
 
             return
 
         quantity = self.convert_quote_to_contracts(pair, amount)
 
-        if(quantity == 0):
-            self.notificator.send_warning_notification(f"Can't open new position, low amount for pair: {pair}")
+        if (quantity == 0):
+            self.notificator.send_warning_notification(
+                f"Can't open new position, low amount for pair: {pair}")
 
             return
 
-        self.okx.set_leverage(leverage=leverage, symbol=pair, params = {
+        self.okx.set_leverage(leverage=leverage, symbol=pair, params={
             'mgnMode': 'isolated',
             'posSide': 'short'
         })
 
-        order = self.okx.create_order(symbol=pair, side = 'sell', type='market', amount=quantity, params = {
+        order = self.okx.create_order(symbol=pair, side='sell', type='market', amount=quantity, params={
             'posSide': 'short',
             'tdMode': 'isolated',
         })
 
         positions = self.okx.fetch_positions()
 
-        open_position = next((p for p in positions if  p['info']['instId'] == pair), None)
+        open_position = next(
+            (p for p in positions if p['info']['instId'] == pair), None)
 
-        self.db_add_new_deal(pair, open_position['info']['posId'], datetime.now().timestamp())
+        self.db_add_new_deal(
+            pair, open_position['info']['posId'], datetime.now().timestamp())
 
         self.okx.add_margin(symbol=pair, amount=0.2, params={
             'posSide': 'short'
         })
 
     def add_to_short_position(self, pair, amount):
-        self.notificator.send_notification(f"Received signal type: add, pair: {pair}, amount: {amount}")
+        self.notificator.send_notification(
+            f"Received signal type: add, pair: {pair}, amount: {amount}")
 
         positions = self.okx.fetch_positions()
 
-        open_position = next((p for p in positions if  p['info']['instId'] == pair), None)
+        open_position = next(
+            (p for p in positions if p['info']['instId'] == pair), None)
 
-        if(not open_position):
-            self.notificator.send_warning_notification(f"Can't average position, position not exists pair: {pair}")
+        if (not open_position):
+            self.notificator.send_warning_notification(
+                f"Can't average position, position not exists pair: {pair}")
 
             return
 
         quantity = self.convert_quote_to_contracts(pair, amount)
 
-        if(quantity == 0):
-            self.notificator.send_warning_notification(f"Can't average position, low amount for pair: {pair}")
+        if (quantity == 0):
+            self.notificator.send_warning_notification(
+                f"Can't average position, low amount for pair: {pair}")
 
             return
 
-        order = self.okx.create_order(symbol=pair, side = 'sell', type='market', amount=quantity, params = {
+        order = self.okx.create_order(symbol=pair, side='sell', type='market', amount=quantity, params={
             'posSide': 'short',
             'tdMode': 'isolated',
         })
@@ -135,21 +145,25 @@ class Connector:
 
         deal = self.db_get_deal(open_position['info']['posId'])
 
-        self.notificator.send_notification(f"Averaged position ({deal.safety_order_count})")
+        self.notificator.send_notification(
+            f"Averaged position ({deal.safety_order_count})")
 
     def close_short_position(self, pair):
-        self.notificator.send_notification(f"Received signal type: close, pair: {pair}")
+        self.notificator.send_notification(
+            f"Received signal type: close, pair: {pair}")
 
         positions = self.okx.fetch_positions()
 
-        open_position = next((p for p in positions if  p['info']['instId'] == pair), None)
+        open_position = next(
+            (p for p in positions if p['info']['instId'] == pair), None)
 
-        if(not open_position):
-            self.notificator.send_warning_notification(f"Can't close position, position not exists pair: {pair}")
+        if (not open_position):
+            self.notificator.send_warning_notification(
+                f"Can't close position, position not exists pair: {pair}")
 
             return
 
-        order = self.okx.create_order(symbol=pair, side = 'buy', type='market', amount=int(open_position['contracts']), params = {
+        order = self.okx.create_order(symbol=pair, side='buy', type='market', amount=int(open_position['contracts']), params={
             'posSide': 'short',
             'tdMode': 'isolated',
         })
@@ -158,6 +172,8 @@ class Connector:
 
         result = self.okx.fetch_order(id, symbol=pair)
 
-        self.db_close_deal(open_position['info']['posId'], result['info']['pnl'], result['timestamp'])
+        self.db_close_deal(
+            open_position['info']['posId'], result['info']['pnl'], result['timestamp'])
 
-        self.notificator.send_notification(f"PNL:{result['info']['pnl']} Symbol:{result['symbol']} size: {result['info']['fillSz']}")
+        self.notificator.send_notification(
+            f"PNL:{result['info']['pnl']} Symbol:{result['symbol']} size: {result['info']['fillSz']}")
