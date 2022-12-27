@@ -5,7 +5,7 @@ from datetime import datetime
 from bot.models.deals import Deals
 from bot.notificator import Notificator
 from bot.settings import Config
-
+from decimal import Decimal, ROUND_DOWN
 
 class Connector:
     def __init__(self):
@@ -40,6 +40,11 @@ class Connector:
         deal.safety_order_count = deal.safety_order_count + 1
         deal.save()
 
+    def db_get_opened_deals(self):
+        query = Deals.select().where(Deals.date_close.is_null())
+
+        return query
+
     def db_get_deal(self, posId):
         deal = Deals.get(Deals.exchangeId == posId, Deals.date_close.is_null())
 
@@ -51,11 +56,20 @@ class Connector:
 
         return int(amount / price / market['contractSize'])
 
+
+    def findElement(self, items, function):
+        for item in items:
+            if function(item):
+                return item
+
     def get_open_positions(self):
         positions = self.okx.fetch_positions()
+        deals = self.db_get_opened_deals()
 
         result = ""
         for item in positions:
+            deal = self.findElement(deals, (lambda deal: deal.pair == item['info']['instId']))
+
             result += (
                 f"{item['info']['instId']}\n"
                 f"margin: {item['info']['margin']}\n"
@@ -63,7 +77,8 @@ class Connector:
                 f"avgPrice: {item['info']['avgPx']}\n"
                 f"unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%)\n"
                 f"liquidationPrice: {item['liquidationPrice']}\n"
-                f"Pos size: {item['info']['notionalUsd']}💰\n\n"
+                f"Pos size: {item['info']['notionalUsd']}💰\n"
+                f"Safety orders {deal.safety_order_count if deal else 'Unknown info'}\n\n"
             )
 
         return result
@@ -168,12 +183,17 @@ class Connector:
             'tdMode': 'isolated',
         })
 
-        id = order['id']
-
-        result = self.okx.fetch_order(id, symbol=pair)
+        result = self.okx.fetch_order(order['id'], symbol=pair)
 
         self.db_close_deal(
             open_position['info']['posId'], result['info']['pnl'], result['timestamp'])
 
+        response = self.okx.fetch2(path='account/positions-history', api='private', params={'limit': 1, 'instId': pair})
+        positions = self.okx.parse_orders(response['data'])
+        position = positions[0]
+
+        pnl_percentage = round(float(position['info']['pnlRatio']), 4) * 100
+        pnl = Decimal(position['info']['pnl']).quantize(Decimal('0.0001'), rounding=ROUND_DOWN)
+
         self.notificator.send_notification(
-            f"PNL:{result['info']['pnl']} Symbol:{result['symbol']} size: {result['info']['fillSz']}")
+            f"Profit:{pnl}$ ({pnl_percentage}%) Symbol:{result['symbol']} size: {result['info']['fillSz']}")

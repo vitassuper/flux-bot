@@ -9,12 +9,12 @@ class Notificator:
         self.bot = Bot(self.config.telegram_token)
 
     def send_warning_notification(self, text):
-        text = f"{self.config.exchange_name}:\n🚨{text}"
-
-        self.bot.send_message(self.config.telegram_chat_id, text)
-        self.bot.send_message(self.config.telegram_chat_id2, text)
+        self.send_message(f"🚨{text}")
 
     def send_notification(self, text, chatId=None):
+        self.send_message(text, chatId)
+
+    def send_message(self, text, chatId=None):
         text = f"{self.config.exchange_name}:\n{text}"
 
         if (chatId):
