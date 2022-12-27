@@ -1,6 +1,6 @@
 .git
 .github
-# .dockerignore
+.dockerignore
 .gitignore
 
 .idea
@@ -10,7 +10,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
-*.db
 htmlcov/
 .coverage
 .coverage.*
@@ -25,6 +24,3 @@ venv
 
 .vscode
 .idea
-
-std.log
-.env
