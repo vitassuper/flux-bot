@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  trading_view_connector:
+    build:
+      context: ./
+    ports:
+      - "80:80"
+    restart: always
+    volumes:
+      - .:/app
