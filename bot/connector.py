@@ -73,12 +73,12 @@ class Connector:
 
             result += (
                 f"{item['info']['instId']}\n"
-                f"margin: {item['info']['margin']}\n"
+                f"margin: {Decimal(item['info']['margin']).quantize(Decimal('0.001'))}\n"
                 f"entryPrice: {item['entryPrice']}\n"
                 f"avgPrice: {item['info']['avgPx']}\n"
-                f"unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%)\n"
+                f"unrealizedPnl: {Decimal(item['unrealizedPnl']).quantize(Decimal('0.0001'))} ({round(item['percentage'], 2)}%)\n"
                 f"liquidationPrice: {item['liquidationPrice']}\n"
-                f"Pos size: {item['info']['notionalUsd']}💰\n"
+                f"Pos size: {Decimal(item['info']['notionalUsd']).quantize(Decimal('0.001'))}💰\n"
                 f"Duration: {self.get_time_duration(deal.date_open, datetime.now())}\n"
                 f"Safety orders {deal.safety_order_count if deal else 'Unknown info'}\n\n"
             )
