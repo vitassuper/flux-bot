@@ -64,6 +64,7 @@ class Connector:
 
     def get_open_positions(self):
         positions = self.okx.fetch_positions()
+        positions.sort(key=lambda item: item['info']['instId'])
         deals = self.db_get_opened_deals()
 
         result = ""
@@ -78,6 +79,7 @@ class Connector:
                 f"unrealizedPnl: {item['unrealizedPnl']} ({round(item['percentage'], 2)}%)\n"
                 f"liquidationPrice: {item['liquidationPrice']}\n"
                 f"Pos size: {item['info']['notionalUsd']}💰\n"
+                f"Duration: {self.get_time_duration(deal.date_open, datetime.now())}\n"
                 f"Safety orders {deal.safety_order_count if deal else 'Unknown info'}\n\n"
             )
 
@@ -185,6 +187,8 @@ class Connector:
 
         result = self.okx.fetch_order(order['id'], symbol=pair)
 
+        deal = self.db_get_deal(open_position['info']['posId'])
+
         self.db_close_deal(
             open_position['info']['posId'], result['info']['pnl'], result['timestamp'])
 
@@ -195,9 +199,27 @@ class Connector:
 
         pnl_percentage = self.calculate_pnl_percentage(price, avgPrice, float(result['info']['lever']), result['info']['posSide'])
 
-        self.notificator.send_notification(
-            f"Profit:{pnl}$ ({pnl_percentage}%) Symbol:{result['symbol']} size: {result['info']['fillSz']}")
+        duration = self.get_time_duration(deal.date_open, datetime.fromtimestamp(result['timestamp'] / 1000))
 
+        self.notificator.send_notification((
+            f"{result['symbol']}\n"
+            f"Profit:{pnl}$ ({pnl_percentage}%)\n"
+            f"Size: {result['info']['fillSz']}\n"
+            f"Duration: {duration}"
+        ))
+
+    def get_time_duration(self, date_open, date_close):
+        diff = date_close - date_open
+        seconds_duration = diff.total_seconds()
+
+        days, seconds = divmod(seconds_duration, 86400)
+        hours, seconds = divmod(seconds_duration, 3600)
+        minutes, seconds = divmod(seconds_duration, 60)
+
+        hours, minutes = divmod(minutes, 60)
+
+        return f"{int(days)} days, {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds"
+    
     def calculate_pnl_percentage(self, closePrice, avgPrice, leverage, posSide):
         sign = 1
 
