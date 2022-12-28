@@ -124,7 +124,7 @@ class Connector:
         self.db_add_new_deal(
             pair, open_position['info']['posId'], datetime.now().timestamp())
 
-        self.okx.add_margin(symbol=pair, amount=0.2, params={
+        self.okx.add_margin(symbol=pair, amount=0.7, params={
             'posSide': 'short'
         })
 
