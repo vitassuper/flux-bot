@@ -1,4 +1,5 @@
-from telegram import Bot
+import sys
+from telegram import Bot, TelegramError
 
 from bot.settings import Config
 
@@ -15,10 +16,13 @@ class Notificator:
         self.send_message(text, chatId)
 
     def send_message(self, text, chatId=None):
-        text = f"{self.config.exchange_name}:\n{text}"
+        try:
+            text = f"{self.config.exchange_name}:\n{text}"
 
-        if (chatId):
-            self.bot.send_message(chatId, text)
-        else:
-            self.bot.send_message(self.config.telegram_chat_id, text)
-            self.bot.send_message(self.config.telegram_chat_id2, text)
+            if (chatId):
+                self.bot.send_message(chatId, text)
+            else:
+                self.bot.send_message(self.config.telegram_chat_id, text)
+                self.bot.send_message(self.config.telegram_chat_id2, text)
+        except TelegramError as error:
+            print(error.message, file=sys.stderr)

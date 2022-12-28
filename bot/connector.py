@@ -188,12 +188,23 @@ class Connector:
         self.db_close_deal(
             open_position['info']['posId'], result['info']['pnl'], result['timestamp'])
 
-        response = self.okx.fetch2(path='account/positions-history', api='private', params={'limit': 1, 'instId': pair})
-        positions = self.okx.parse_orders(response['data'])
-        position = positions[0]
+        pnl = Decimal(result['info']['pnl']).quantize(Decimal('0.0001'), rounding=ROUND_DOWN)
 
-        pnl_percentage = round(float(position['info']['pnlRatio']), 4) * 100
-        pnl = Decimal(position['info']['pnl']).quantize(Decimal('0.0001'), rounding=ROUND_DOWN)
+        avgPrice = open_position['entryPrice']
+        price = result['price']
+
+        pnl_percentage = self.calculate_pnl_percentage(price, avgPrice, float(result['info']['lever']), result['info']['posSide'])
 
         self.notificator.send_notification(
             f"Profit:{pnl}$ ({pnl_percentage}%) Symbol:{result['symbol']} size: {result['info']['fillSz']}")
+
+    def calculate_pnl_percentage(self, closePrice, avgPrice, leverage, posSide):
+        sign = 1
+
+        if(posSide == 'short' and closePrice > avgPrice):
+            sign = -1
+
+        if(posSide == 'long' and closePrice < avgPrice):
+            sign = -1
+
+        return Decimal(((closePrice - avgPrice) / avgPrice) * float(leverage) * 100 * sign).quantize(Decimal('0.01'))
