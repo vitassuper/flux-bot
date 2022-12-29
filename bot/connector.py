@@ -223,10 +223,7 @@ class Connector:
     def calculate_pnl_percentage(self, closePrice, avgPrice, leverage, posSide):
         sign = 1
 
-        if(posSide == 'short' and closePrice > avgPrice):
-            sign = -1
-
-        if(posSide == 'long' and closePrice < avgPrice):
+        if(posSide == 'short'):
             sign = -1
 
         return Decimal(((closePrice - avgPrice) / avgPrice) * float(leverage) * 100 * sign).quantize(Decimal('0.01'))
