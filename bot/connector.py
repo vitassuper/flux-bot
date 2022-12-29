@@ -57,7 +57,11 @@ class Connector:
         market = self.okx.market(symbol)
         price = self.okx.fetch_ticker(symbol)["last"]
 
-        return int(amount / price / market["contractSize"])
+        contractsSize = int(amount / price / market["contractSize"])
+
+        contractsCost = contractsSize * price * market["contractSize"]
+
+        return contractsSize, contractsCost
 
     def findElement(self, items, function):
         for item in items:
@@ -107,7 +111,7 @@ class Connector:
 
             return
 
-        quantity = self.convert_quote_to_contracts(pair, amount)
+        quantity, contractsCost = self.convert_quote_to_contracts(pair, amount)
 
         if quantity == 0:
             self.notificator.send_warning_notification(
@@ -143,7 +147,7 @@ class Connector:
             pair, open_position["info"]["posId"], datetime.now().timestamp()
         )
 
-        self.okx.add_margin(symbol=pair, amount=0.7, params={"posSide": "short"})
+        self.okx.add_margin(symbol=pair, amount=contractsCost * 0.02, params={"posSide": "short"})
 
     def add_to_short_position(self, pair, amount):
         self.notificator.send_notification(
@@ -163,7 +167,7 @@ class Connector:
 
             return
 
-        quantity = self.convert_quote_to_contracts(pair, amount)
+        quantity, contractsCost = self.convert_quote_to_contracts(pair, amount)
 
         if quantity == 0:
             self.notificator.send_warning_notification(
@@ -182,6 +186,8 @@ class Connector:
                 "tdMode": "isolated",
             },
         )
+
+        self.okx.add_margin(symbol=pair, amount=contractsCost * 0.02, params={"posSide": "short"})
 
         self.db_add_safety_order(open_position["info"]["posId"])
 
