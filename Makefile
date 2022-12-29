@@ -7,6 +7,9 @@ runb:
 run-poetry:
 	poetry install && poetry run bot
 
+format:
+	poetry run black .
+
 build:
 	docker-compose build
 
