@@ -35,6 +35,31 @@ connector_secret: abc123
 pair: ICP-USDT-SWAP
 ```
 
+## Usage
+
+```bash
+# Build with docker-compose:
+make build
+
+# Run with docker-compose in detach mode:
+make run
+
+# Run with docker-compose:
+make runb
+
+# Dive into the container:
+make exec
+
+# Stop the container:
+make stop
+
+# Run locally with poetry:
+make run-poetry
+
+# Format code with black:
+make format
+```
+
 ## Credits
 
 - [Vitaliy Klychkov](https://github.com/vitassuper) - the greatest financial wheeler-dealer
