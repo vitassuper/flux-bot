@@ -2,20 +2,20 @@
 name = "trading-view-connector"
 version = "1.0.0"
 description = ""
-authors = ["Vitaliy Klychkov, Mykola Symon"]
+authors = ["Vitaliy Klychkov, Mykola Symon, Vladimir Grigoriev"]
 readme = "README.md"
 packages = [{include = "bot"}]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.10,<3.12"
 python-dotenv = "^0.21.0"
-pyramid = "^2.0"
 python-telegram-bot = "^13.14"
 ccxt = "^2.4"
-peewee = "^3.15"
+fastapi = "^0.88"
+pydantic = "^1.10"
+SQLAlchemy = "^1.4"
+alembic = "^1.9"
 
-[tool.poetry.dev-dependencies]
-black = "^22.12"
 
 [build-system]
 requires = ["poetry-core"]
