@@ -1,7 +1,13 @@
 from datetime import datetime
 from peewee import fn
 from telegram import ReplyKeyboardMarkup, Update, KeyboardButton
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    CallbackContext,
+    MessageHandler,
+    Filters,
+)
 
 from bot.models.deals import Deals
 from bot.connector import Connector
@@ -9,13 +15,15 @@ from bot.settings import Config
 
 
 def start(update: Update, context: CallbackContext) -> None:
-    get_positions_button = KeyboardButton('Get positions')
-    get_stats_button = KeyboardButton('Get stats')
+    get_positions_button = KeyboardButton("Get positions")
+    get_stats_button = KeyboardButton("Get stats")
 
     keyboard = [[get_positions_button, get_stats_button]]
 
-    update.message.reply_text('Choose a command', reply_markup=ReplyKeyboardMarkup(
-        keyboard, resize_keyboard=True))
+    update.message.reply_text(
+        "Choose a command",
+        reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
+    )
 
 
 def get_stats_handler(update: Update, context: CallbackContext) -> None:
@@ -40,11 +48,13 @@ def get_positions_handler(update: Update, context: CallbackContext) -> None:
 def run():
     config = Config()
     updater = Updater(config.telegram_token)
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(MessageHandler(
-        Filters.regex('^Get positions$'), get_positions_handler))
-    updater.dispatcher.add_handler(MessageHandler(
-        Filters.regex('^Get stats$'), get_stats_handler))
+    updater.dispatcher.add_handler(CommandHandler("start", start))
+    updater.dispatcher.add_handler(
+        MessageHandler(Filters.regex("^Get positions$"), get_positions_handler)
+    )
+    updater.dispatcher.add_handler(
+        MessageHandler(Filters.regex("^Get stats$"), get_stats_handler)
+    )
 
     updater.start_polling()
     updater.idle([])

@@ -14,50 +14,52 @@ from bot.tg import run
 configEnv = Config()
 
 
-@view_config(request_method='POST', route_name='handler', renderer='json')
+@view_config(request_method="POST", route_name="handler", renderer="json")
 def handle(request):
-    connector_secret = request.json_body.get('connector_secret', '')
-    type_of_signal = request.json_body.get('type_of_signal', '')
-    pair = request.json_body.get('pair', '')
-    amount = request.json_body.get('amount', '')
+    connector_secret = request.json_body.get("connector_secret", "")
+    type_of_signal = request.json_body.get("type_of_signal", "")
+    pair = request.json_body.get("pair", "")
+    amount = request.json_body.get("amount", "")
 
     connector = Connector()
 
-    if (configEnv.validate_connector_secret(connector_secret)):
-        print('Correct secret')
+    if configEnv.validate_connector_secret(connector_secret):
+        print("Correct secret")
     else:
-        print('Incorrect secret')
+        print("Incorrect secret")
 
         return {}
 
     match type_of_signal:
-        case 'open':
-            margin_amount = request.json_body.get('margin_amount', None)
+        case "open":
+            margin_amount = request.json_body.get("margin_amount", None)
             connector.open_short_position(
-                pair=pair, amount=amount, leverage=20, margin=margin_amount)
+                pair=pair, amount=amount, leverage=20, margin=margin_amount
+            )
 
-        case 'add':
+        case "add":
             connector.add_to_short_position(pair=pair, amount=amount)
 
-        case 'close':
+        case "close":
             connector.close_short_position(pair=pair)
 
-        case 'check':
+        case "check":
             connector.get_open_positions()
 
     return {}
 
 
 def main():
-    logging.basicConfig(filename="std.log",
-                        format='%(asctime)s %(message)s', level=logging.ERROR)
+    logging.basicConfig(
+        filename="std.log", format="%(asctime)s %(message)s", level=logging.ERROR
+    )
 
     try:
         with Configurator() as config:
-            config.add_route('handler', '/')
+            config.add_route("handler", "/")
             config.scan()
             app = config.make_wsgi_app()
-        server = make_server('0.0.0.0', 80, app)
+        server = make_server("0.0.0.0", 80, app)
 
         thread1 = threading.Thread(target=server.serve_forever)
         thread2 = threading.Thread(target=run)

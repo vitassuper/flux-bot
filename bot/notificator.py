@@ -19,7 +19,7 @@ class Notificator:
         try:
             text = f"{self.config.exchange_name}:\n{text}"
 
-            if (chatId):
+            if chatId:
                 self.bot.send_message(chatId, text)
             else:
                 self.bot.send_message(self.config.telegram_chat_id, text)

@@ -1,7 +1,14 @@
-from peewee import SqliteDatabase, Model, CharField, TimestampField, DecimalField, SmallIntegerField
+from peewee import (
+    SqliteDatabase,
+    Model,
+    CharField,
+    TimestampField,
+    DecimalField,
+    SmallIntegerField,
+)
 
 
-db = SqliteDatabase('connector.db')
+db = SqliteDatabase("connector.db")
 
 
 class Deals(Model):
