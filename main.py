@@ -1,7 +1,8 @@
+import uvicorn as uvicorn
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from src.app.routes import user
+from src.app.routes import deals
 from src.core.config import settings
 
 
@@ -19,4 +20,7 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-app.include_router(user.api_router, prefix=settings.API_V1_STR)
+app.include_router(deals.api_router, prefix=settings.API_V1_STR)
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", port=5000, log_level="info")
