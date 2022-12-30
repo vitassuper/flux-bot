@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, SmallInteger, Numeric
 
-from src.db.base_class import Base
+from src.app.models.base import Base
 
 
 class Deal(Base):
