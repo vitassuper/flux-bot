@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trading-view-connector"
-version = "1.0.0"
+version = "0.0.2"
 description = ""
 authors = ["Vitaliy Klychkov, Mykola Symon, Vladimir Grigoriev"]
 readme = "README.md"
@@ -12,7 +12,7 @@ python-dotenv = "^0.21.0"
 python-telegram-bot = "^13.14"
 ccxt = "^2.4"
 fastapi = "^0.88"
-pydantic = "^1.10"
+pydantic = "^1.10.4"
 SQLAlchemy = "^1.4"
 alembic = "^1.9"
 uvicorn = "^0.20"
@@ -29,4 +29,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-bot = "bot.main:main"
+bot = "main:__main__"

@@ -12,6 +12,7 @@ __pycache__/
 *.so
 htmlcov/
 .coverage
+poetry.lock
 .coverage.*
 .pytest_cache/
 .venv

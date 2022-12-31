@@ -10,3 +10,12 @@ services:
     volumes:
       - .:/app
       - /app/.venv
+
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=connector
+    ports:
+      - '5432:5432'
