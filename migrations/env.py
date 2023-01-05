@@ -7,7 +7,7 @@ from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
 from src.core.config import settings
-from src.db.base import Base
+from src.db import Base
 
 config = context.config
 
