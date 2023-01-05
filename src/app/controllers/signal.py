@@ -1,10 +1,8 @@
-import sys
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Body, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from src.app import schemas
-from src.app.services import deal as service
 from src.bot.connector import Connector
 from src.core.config import settings
 
@@ -18,7 +16,7 @@ async def verify_secret(request: Request):
 router = APIRouter(dependencies=[Depends(verify_secret)])
 
 @router.post("/open")
-def open_signal(*, signal: schemas.OpenSignal) -> Any:
+async def open_signal(*, signal: schemas.OpenSignal) -> Any:
     connector = Connector()
 
     connector.open_short_position(signal.pair, signal.amount)
@@ -26,7 +24,7 @@ def open_signal(*, signal: schemas.OpenSignal) -> Any:
     return Response(status_code=204)
 
 @router.post("/add")
-def add_signal(signal: schemas.AddSignal) -> Any:
+async def add_signal(signal: schemas.AddSignal) -> Any:
     connector = Connector()
 
     connector.add_to_short_position(signal.pair, signal.amount)
@@ -35,7 +33,7 @@ def add_signal(signal: schemas.AddSignal) -> Any:
 
 
 @router.post("/close")
-def close_signal(signal: schemas.CloseSignal) -> Any:
+async def close_signal(signal: schemas.CloseSignal) -> Any:
     connector = Connector()
 
     connector.close_short_position(signal.pair)
