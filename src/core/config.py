@@ -22,6 +22,7 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     PROJECT_NAME: str
+    DEBUG_MODE: bool
 
     POSTGRES_SERVER: str
     POSTGRES_USER: str
@@ -40,6 +41,15 @@ class Settings(BaseSettings):
             host=values.get("POSTGRES_SERVER"),
             path=f"/{values.get('POSTGRES_DB') or ''}",
         )
+
+    CONNECTOR_SECRET: Optional[str] = None
+    TELEGRAM_BOT_TOKEN: str
+
+    API_KEY: str
+    API_SECRET: str
+    API_PASSWORD: str
+    TELEGRAM_CHAT_ID: str
+    TELEGRAM_CHAT_ID2: str
 
     class Config:
         env_file = ".env"
