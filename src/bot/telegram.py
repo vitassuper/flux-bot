@@ -1,5 +1,4 @@
 from datetime import datetime
-from peewee import fn
 from telegram import ReplyKeyboardMarkup, Update, KeyboardButton
 from telegram.ext import (
     Updater,
@@ -9,9 +8,8 @@ from telegram.ext import (
     Filters,
 )
 
-from bot.models.deals import Deals
-from bot.connector import Connector
-from bot.settings import Config
+from src.bot.connector import Connector
+from src.core.config import settings
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -28,14 +26,16 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def get_stats_handler(update: Update, context: CallbackContext) -> None:
 
-    now = datetime.now().timestamp()
-    midnight = now - (now % 86400)  # 86400 seconds in a day
+    # now = datetime.now().timestamp()
+    # midnight = now - (now % 86400)  # 86400 seconds in a day
 
-    deals = Deals.select().where(Deals.date_close >= midnight)
+    # deals = Deals.select().where(Deals.date_close >= midnight)
 
-    pnl_sum = deals.select(fn.Sum(Deals.pnl)).scalar()
+    # pnl_sum = deals.select(fn.Sum(Deals.pnl)).scalar()
 
-    update.message.reply_text(f"PNL: {pnl_sum}")
+    # update.message.reply_text(f"PNL: {pnl_sum}")
+
+    update.message.reply_text(f"Not available yet")
 
 
 def get_positions_handler(update: Update, context: CallbackContext) -> None:
@@ -44,10 +44,8 @@ def get_positions_handler(update: Update, context: CallbackContext) -> None:
 
     update.message.reply_text(result)
 
-
 def run():
-    config = Config()
-    updater = Updater(config.telegram_token)
+    updater = Updater(settings.TELEGRAM_BOT_TOKEN)
     updater.dispatcher.add_handler(CommandHandler("start", start))
     updater.dispatcher.add_handler(
         MessageHandler(Filters.regex("^Get positions$"), get_positions_handler)

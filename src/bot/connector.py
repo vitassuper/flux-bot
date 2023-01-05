@@ -1,57 +1,35 @@
 import ccxt
 
 from datetime import datetime
+from src.app.schemas.deals import DealCreate, DealUpdate
 
-from bot.models.deals import Deals
-from bot.notificator import Notificator
-from bot.settings import Config
+from src.app.services.deal import create_deal, get_deal_by_exchange_id, get_opened_deals, increment_safety_orders_count, update_deal_by_exchange_id
+from src.bot.notificator import Notificator
 from decimal import Decimal, ROUND_DOWN
+
+from src.core.config import settings
 
 
 class Connector:
     def __init__(self):
-        configEnv = Config()
-
-        self.config = configEnv
-        self.notificator = Notificator()
-
         self.okx = ccxt.okex(
             {
-                "apiKey": configEnv.apiKey,
-                "secret": configEnv.apiSecret,
-                "password": "That's1Me",
+                "apiKey": settings.API_KEY,
+                "secret": settings.API_SECRET,
+                "password": settings.API_PASSWORD,
                 "options": {
                     "defaultType": "swap",
                 },
             }
         )
 
+        self.notificator = Notificator()
+
         self.okx.load_markets()
 
     def db_add_new_deal(self, pair, posId, date_open):
-        deal = Deals(pair=pair, exchangeId=posId, date_open=date_open)
-        deal.save()
+        create_deal(DealCreate(pair=pair, exchange_id=posId, date_open=date_open))
 
-    def db_close_deal(self, posId, pnl, timestamp):
-        deal = Deals.get(Deals.exchangeId == posId, Deals.date_close.is_null())
-        deal.pnl = pnl
-        deal.date_close = timestamp
-        deal.save()
-
-    def db_add_safety_order(self, posId):
-        deal = Deals.get(Deals.exchangeId == posId, Deals.date_close.is_null())
-        deal.safety_order_count = deal.safety_order_count + 1
-        deal.save()
-
-    def db_get_opened_deals(self):
-        query = Deals.select().where(Deals.date_close.is_null())
-
-        return query
-
-    def db_get_deal(self, posId):
-        deal = Deals.get(Deals.exchangeId == posId, Deals.date_close.is_null())
-
-        return deal
 
     def convert_quote_to_contracts(self, symbol, amount):
         market = self.okx.market(symbol)
@@ -71,7 +49,8 @@ class Connector:
     def get_open_positions(self):
         positions = self.okx.fetch_positions()
         positions.sort(key=lambda item: item["info"]["instId"])
-        deals = self.db_get_opened_deals()
+
+        deals = get_opened_deals()
 
         result = ""
         for item in positions:
@@ -87,16 +66,25 @@ class Connector:
                 f"unrealizedPnl: {Decimal(item['unrealizedPnl']).quantize(Decimal('0.0001'))} ({round(item['percentage'], 2)}%)\n"
                 f"liquidationPrice: {item['liquidationPrice']}\n"
                 f"Pos size: {Decimal(item['info']['notionalUsd']).quantize(Decimal('0.001'))}💰\n"
-                f"Duration: {self.get_time_duration(deal.date_open, datetime.now())}\n"
+                f"Duration: {self.get_time_duration(deal.date_open, datetime.now()) if deal else 'Unknown info'}\n"
                 f"Safety orders {deal.safety_order_count if deal else 'Unknown info'}\n\n"
             )
 
         return result
 
-    def open_short_position(self, pair, amount, leverage=20, margin=None):
+    def open_short_position(self, pair, amount, leverage=20):
         self.notificator.send_notification(
-            f"Received signal type: open, pair: {pair}, amount: {amount}"
+            f"Received open signal: pair: {pair}, amount: {amount}"
         )
+
+        quantity, contractsCost = self.convert_quote_to_contracts(pair, amount)
+
+        if quantity == 0:
+            self.notificator.send_warning_notification(
+                f"Can't open new position, low amount for pair: {pair}"
+            )
+
+            return
 
         positions = self.okx.fetch_positions()
 
@@ -107,15 +95,6 @@ class Connector:
         if open_position:
             self.notificator.send_warning_notification(
                 f"Can't open new position, position already exists pair: {pair}"
-            )
-
-            return
-
-        quantity, contractsCost = self.convert_quote_to_contracts(pair, amount)
-
-        if quantity == 0:
-            self.notificator.send_warning_notification(
-                f"Can't open new position, low amount for pair: {pair}"
             )
 
             return
@@ -189,9 +168,7 @@ class Connector:
 
         self.okx.add_margin(symbol=pair, amount=contractsCost * 0.02, params={"posSide": "short"})
 
-        self.db_add_safety_order(open_position["info"]["posId"])
-
-        deal = self.db_get_deal(open_position["info"]["posId"])
+        deal = increment_safety_orders_count(open_position["info"]["posId"])
 
         self.notificator.send_notification(
             f"Averaged position ({deal.safety_order_count})"
@@ -226,25 +203,20 @@ class Connector:
 
         result = self.okx.fetch_order(order["id"], symbol=pair)
 
-        deal = self.db_get_deal(open_position["info"]["posId"])
+        deal = get_deal_by_exchange_id(open_position["info"]["posId"])
 
-        self.db_close_deal(
-            open_position["info"]["posId"], result["info"]["pnl"], result["timestamp"]
-        )
+        update_deal_by_exchange_id(open_position["info"]["posId"], DealUpdate(pnl=result["info"]["pnl"], date_close=result["timestamp"]/1000))
 
         pnl = Decimal(result["info"]["pnl"]).quantize(
             Decimal("0.0001"), rounding=ROUND_DOWN
         )
 
-        avgPrice = open_position["entryPrice"]
-        price = result["price"]
-
         pnl_percentage = self.calculate_pnl_percentage(
-            price, avgPrice, float(result["info"]["lever"]), result["info"]["posSide"]
+            result["price"], open_position["entryPrice"], float(result["info"]["lever"]), result["info"]["posSide"]
         )
 
         duration = self.get_time_duration(
-            deal.date_open, datetime.fromtimestamp(result["timestamp"] / 1000)
+            datetime.fromtimestamp(deal.date_open), datetime.fromtimestamp(result["timestamp"] / 1000)
         )
 
         self.notificator.send_notification(

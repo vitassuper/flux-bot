@@ -1,1 +1,1 @@
-from .deals import deal
+from .deal import deal
