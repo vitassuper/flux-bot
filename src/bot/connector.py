@@ -126,7 +126,7 @@ class Connector:
             pair, open_position["info"]["posId"], datetime.now().timestamp()
         )
 
-        self.okx.add_margin(symbol=pair, amount=contractsCost * 0.02, params={"posSide": "short"})
+        self.okx.add_margin(symbol=pair, amount=contractsCost * 0.06, params={"posSide": "short"})
 
     def add_to_short_position(self, pair, amount):
         self.notificator.send_notification(
@@ -166,7 +166,7 @@ class Connector:
             },
         )
 
-        self.okx.add_margin(symbol=pair, amount=contractsCost * 0.02, params={"posSide": "short"})
+        self.okx.add_margin(symbol=pair, amount=contractsCost * 0.06, params={"posSide": "short"})
 
         deal = increment_safety_orders_count(open_position["info"]["posId"])
 
