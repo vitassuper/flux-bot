@@ -9,7 +9,6 @@ from decimal import Decimal, ROUND_DOWN
 
 from src.core.config import settings
 
-
 class Connector:
     def __init__(self):
         self.okx = ccxt.okex(
@@ -249,3 +248,5 @@ class Connector:
         return Decimal(
             ((closePrice - avgPrice) / avgPrice) * float(leverage) * 100 * sign
         ).quantize(Decimal("0.01"))
+
+connector = Connector()

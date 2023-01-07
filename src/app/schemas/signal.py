@@ -1,11 +1,16 @@
-from pydantic import BaseModel, Field
+from typing import Literal
+from pydantic import BaseModel
 
 class OpenSignal(BaseModel):
-    pair: str = Field(max_length=255)
+    type_of_signal: Literal['open']
+    pair: str
     amount: float
 
-class AddSignal(OpenSignal):
-    pass
-
 class CloseSignal(BaseModel):
-    pair: str = Field(max_length=255)
+    type_of_signal: Literal['close']
+    pair: str
+
+class AddSignal(BaseModel):
+    type_of_signal: Literal['add']
+    pair: str
+    amount: float

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from src.core.config import settings
 from starlette.middleware.cors import CORSMiddleware
 from src.app.routes import signal
+from src.bot.connector import connector
 
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f"{settings.API_V1_STR}/openapi.json"
