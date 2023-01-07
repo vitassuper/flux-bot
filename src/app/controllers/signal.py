@@ -1,6 +1,6 @@
 from typing import Any, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, Body
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, Body, BackgroundTasks
 
 from src.app import schemas
 from src.bot.connector import connector
@@ -15,14 +15,7 @@ async def verify_secret(request: Request):
 router = APIRouter(dependencies=[Depends(verify_secret)])
 
 @router.post("")
-async def open_signal(*, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal] = Body(..., discriminator='type_of_signal')) -> Any:
-    if(signal.type_of_signal == 'open'):
-        connector.open_short_position(signal.pair, signal.amount)
-
-    if(signal.type_of_signal == 'close'):   
-        connector.close_short_position(signal.pair)
-
-    if(signal.type_of_signal == 'add'):
-        connector.add_to_short_position(signal.pair, signal.amount)
+async def open_signal(*, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal] = Body(..., discriminator='type_of_signal'), background_tasks: BackgroundTasks) -> Any:
+    background_tasks.add_task(connector.dispatch, signal)
     
     return Response(status_code=204)

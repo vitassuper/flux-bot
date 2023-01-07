@@ -1,7 +1,9 @@
+from typing import Union
 import ccxt
 
 from datetime import datetime
 from src.app.schemas.deals import DealCreate, DealUpdate
+from src.app import schemas
 
 from src.app.services.deal import create_deal, get_deal_by_exchange_id, get_opened_deals, increment_safety_orders_count, update_deal_by_exchange_id
 from src.bot.notificator import Notificator
@@ -26,9 +28,20 @@ class Connector:
 
         self.okx.load_markets()
 
-    def db_add_new_deal(self, pair, posId, date_open):
-        create_deal(DealCreate(pair=pair, exchange_id=posId, date_open=date_open))
+    def dispatch(self, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal]):
+        match signal.type_of_signal:
+            case 'open':
+                connector.open_short_position(signal.pair, signal.amount)
+            case 'close':
+                connector.close_short_position(signal.pair)
+            case 'add':
+                connector.add_to_short_position(signal.pair, signal.amount)
 
+
+    def get_position(self, pair):
+        positions = self.okx.fetch_positions()
+
+        return next((p for p in positions if p["info"]["instId"] == pair), None)
 
     def convert_quote_to_contracts(self, symbol, amount):
         market = self.okx.market(symbol)
@@ -85,13 +98,7 @@ class Connector:
 
             return
 
-        positions = self.okx.fetch_positions()
-
-        open_position = next(
-            (p for p in positions if p["info"]["instId"] == pair), None
-        )
-
-        if open_position:
+        if self.get_position(pair):
             self.notificator.send_warning_notification(
                 f"Can't open new position, position already exists pair: {pair}"
             )
@@ -115,15 +122,9 @@ class Connector:
             },
         )
 
-        positions = self.okx.fetch_positions()
+        open_position = self.get_position(pair)
 
-        open_position = next(
-            (p for p in positions if p["info"]["instId"] == pair), None
-        )
-
-        self.db_add_new_deal(
-            pair, open_position["info"]["posId"], datetime.now().timestamp()
-        )
+        create_deal(DealCreate(pair=pair, exchange_id=open_position["info"]["posId"], date_open=datetime.now().timestamp()))
 
         self.okx.add_margin(symbol=pair, amount=contractsCost * 0.06, params={"posSide": "short"})
 
@@ -132,11 +133,7 @@ class Connector:
             f"Received signal type: add, pair: {pair}, amount: {amount}"
         )
 
-        positions = self.okx.fetch_positions()
-
-        open_position = next(
-            (p for p in positions if p["info"]["instId"] == pair), None
-        )
+        open_position = self.get_position(pair)
 
         if not open_position:
             self.notificator.send_warning_notification(
@@ -176,11 +173,7 @@ class Connector:
     def close_short_position(self, pair):
         self.notificator.send_notification(f"Received signal type: close, pair: {pair}")
 
-        positions = self.okx.fetch_positions()
-
-        open_position = next(
-            (p for p in positions if p["info"]["instId"] == pair), None
-        )
+        open_position = self.get_position(pair)
 
         if not open_position:
             self.notificator.send_warning_notification(
@@ -240,13 +233,8 @@ class Connector:
         return f"{int(days)} days, {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds"
 
     def calculate_pnl_percentage(self, closePrice, avgPrice, leverage, posSide):
-        sign = 1
-
-        if posSide == "short":
-            sign = -1
-
         return Decimal(
-            ((closePrice - avgPrice) / avgPrice) * float(leverage) * 100 * sign
+            ((closePrice - avgPrice) / avgPrice) * float(leverage) * 100 * (-1 if posSide == "short" else 1)
         ).quantize(Decimal("0.01"))
 
 connector = Connector()

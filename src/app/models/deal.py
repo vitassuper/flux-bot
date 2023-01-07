@@ -12,4 +12,4 @@ class Deal(Base):
     safety_order_count = Column(SmallInteger(), default=0)
     date_open = Column(Integer())
     date_close = Column(Integer(), nullable=True, default=None)
-    pnl = Column(Numeric(precision=8), nullable=True)
+    pnl = Column(Numeric(precision=12, scale=5), nullable=True)

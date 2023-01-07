@@ -23,14 +23,14 @@ def get_deal(deal_id: int, db: Session = get_db()) -> Deal:
     return deal
 
 def increment_safety_orders_count(exchange_id: int, db: Session = get_db()):
-    deal = db.query(Deal).filter(Deal.date_close == None, exchange_id == exchange_id).first()
+    deal = db.query(Deal).filter(Deal.date_close == None, exchange_id == exchange_id).order_by(Deal.id.desc()).first()
     if not deal:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
 
     return repository.update(db, deal, DealUpdate(safety_order_count=deal.safety_order_count + 1))
 
 def get_deal_by_exchange_id(exchange_id: int, db: Session = get_db()):
-    deal = db.query(Deal).filter(exchange_id == exchange_id).first()
+    deal = db.query(Deal).filter(exchange_id == exchange_id).order_by(Deal.id.desc()).first()
 
     if not deal:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")

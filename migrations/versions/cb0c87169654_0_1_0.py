@@ -25,7 +25,7 @@ def upgrade():
     sa.Column('safety_order_count', sa.SmallInteger(), nullable=False, default=0),
     sa.Column('date_open', sa.Integer(), nullable=False),
     sa.Column('date_close', sa.Integer(), nullable=True),
-    sa.Column('pnl', sa.Numeric(precision=8), nullable=True),
+    sa.Column('pnl', sa.Numeric(precision=12, scale=5), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_deal_id'), 'deals', ['id'], unique=False)
