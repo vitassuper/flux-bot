@@ -64,19 +64,23 @@ class Connector:
 
         deals = get_opened_deals()
 
+        tickers = self.okx.fetch_tickers([item['info']['instId'] for item in positions if 'info' in item and 'instId' in item['info']])
+
         result = ""
         for item in positions:
             deal = self.findElement(
                 deals, (lambda deal: deal.pair == item["info"]["instId"])
             )
 
+            symbol = item['symbol']
+
             result += (
                 f"{item['info']['instId']}\n"
                 f"margin: {Decimal(item['info']['margin']).quantize(Decimal('0.001'))}\n"
-                f"entryPrice: {item['entryPrice']}\n"
-                f"avgPrice: {item['info']['avgPx']}\n"
+                f"currentPrice: {tickers[item['symbol']]['last']}\n"
+                f"avgPrice: {self.okx.price_to_precision(symbol, item['info']['avgPx'])}\n"
                 f"unrealizedPnl: {Decimal(item['unrealizedPnl']).quantize(Decimal('0.0001'))} ({round(item['percentage'], 2)}%)\n"
-                f"liquidationPrice: {item['liquidationPrice']}\n"
+                f"liquidationPrice: {self.okx.price_to_precision(symbol, item['liquidationPrice'])}\n"
                 f"Pos size: {Decimal(item['info']['notionalUsd']).quantize(Decimal('0.001'))}💰\n"
                 f"Duration: {self.get_time_duration(deal.date_open, datetime.now()) if deal else 'Unknown info'}\n"
                 f"Safety orders {deal.safety_order_count if deal else 'Unknown info'}\n\n"
