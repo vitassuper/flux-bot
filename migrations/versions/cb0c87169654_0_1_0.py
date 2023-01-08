@@ -23,8 +23,8 @@ def upgrade():
     sa.Column('pair', sa.String(length=255), nullable=False),
     sa.Column('exchange_id', sa.String(length=255), nullable=False),
     sa.Column('safety_order_count', sa.SmallInteger(), nullable=False, default=0),
-    sa.Column('date_open', sa.Integer(), nullable=False),
-    sa.Column('date_close', sa.Integer(), nullable=True),
+    sa.Column('date_open', sa.DateTime(), nullable=False),
+    sa.Column('date_close', sa.DateTime(), nullable=True),
     sa.Column('pnl', sa.Numeric(precision=12, scale=5), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )

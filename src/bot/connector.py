@@ -124,7 +124,7 @@ class Connector:
 
         open_position = self.get_position(pair)
 
-        create_deal(DealCreate(pair=pair, exchange_id=open_position["info"]["posId"], date_open=datetime.now().timestamp()))
+        create_deal(DealCreate(pair=pair, exchange_id=open_position["info"]["posId"], date_open=datetime.now()))
 
         self.okx.add_margin(symbol=pair, amount=contractsCost * 0.06, params={"posSide": "short"})
 
@@ -197,7 +197,7 @@ class Connector:
 
         deal = get_deal_by_exchange_id(open_position["info"]["posId"])
 
-        update_deal_by_exchange_id(open_position["info"]["posId"], DealUpdate(pnl=result["info"]["pnl"], date_close=result["timestamp"]/1000))
+        update_deal_by_exchange_id(open_position["info"]["posId"], DealUpdate(pnl=result["info"]["pnl"], date_close=datetime.fromtimestamp(result["timestamp"]/1000)))
 
         pnl = Decimal(result["info"]["pnl"]).quantize(
             Decimal("0.0001"), rounding=ROUND_DOWN
@@ -207,9 +207,7 @@ class Connector:
             result["price"], open_position["entryPrice"], float(result["info"]["lever"]), result["info"]["posSide"]
         )
 
-        duration = self.get_time_duration(
-            datetime.fromtimestamp(deal.date_open), datetime.fromtimestamp(result["timestamp"] / 1000)
-        )
+        duration = self.get_time_duration(deal.date_open, datetime.fromtimestamp(result["timestamp"] / 1000))
 
         self.notificator.send_notification(
             (
@@ -220,7 +218,7 @@ class Connector:
             )
         )
 
-    def get_time_duration(self, date_open, date_close):
+    def get_time_duration(self, date_open: datetime, date_close: datetime) -> str:
         diff = date_close - date_open
         seconds_duration = diff.total_seconds()
 
