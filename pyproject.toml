@@ -4,7 +4,7 @@ version = "0.0.2"
 description = ""
 authors = ["Vitaliy Klychkov, Mykola Symon, Vladimir Grigoriev"]
 readme = "README.md"
-packages = [{include = "bot"}]
+packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
@@ -19,6 +19,7 @@ uvicorn = "^0.20"
 python-jose = "3.3"
 passlib = "^1.7"
 psycopg2 = "^2.9"
+websockets = "^10.4"
 
 [tool.poetry.dev-dependencies]
 email-validator = "^1.3"
