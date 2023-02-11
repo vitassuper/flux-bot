@@ -23,6 +23,16 @@ services:
     volumes: 
       - data_postgres:/var/lib/postgresql/data
 
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - data_redis:/data
+
 volumes:
+  data_redis:
+    driver: local
+
   data_postgres:
     driver: local
