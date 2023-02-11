@@ -72,7 +72,7 @@ class Connector:
             (p for p in positions if p["info"]["instId"] == pair), None)
 
         if open_position:
-            raise ConnectorException('position already exists: {pair}')
+            raise ConnectorException(f"position already exists: {pair}")
 
     def convert_quote_to_contracts(self, symbol: str, amount: float) -> Tuple[int, float]:
         market = self.okx.market(symbol)
@@ -157,10 +157,11 @@ class Connector:
 
         self.add_margin_to_short_position(pair, contracts_cost * 0.06)
 
-        deal = increment_safety_orders_count(open_position["info"]["posId"])
+        safety_count = increment_safety_orders_count(
+            open_position["info"]["posId"])
 
         self.notificator.send_notification(
-            f"Averaged position, pair: {pair}, amount: {amount}")
+            f"Averaged position, pair: {pair}, amount: {amount} safety orders: {safety_count}")
 
     def dispatch_close_short_position(self, pair: str):
         self.notificator.send_notification(
@@ -193,7 +194,8 @@ class Connector:
             f"{result['symbol']}\n"
             f"Profit:{pnl}$ ({pnl_percentage}%)\n"
             f"Size: {result['info']['fillSz']}\n"
-            f"Duration: {duration}"
+            f"Duration: {duration}\n"
+            f"Safery orders: {deal.safety_order_count}"
         ))
 
     def add_margin_to_short_position(self, pair: str, amount: float):

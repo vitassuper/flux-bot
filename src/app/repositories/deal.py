@@ -33,21 +33,22 @@ class CRUDDeal(CRUDBase[Deal, DealCreate, DealUpdate]):
 
             return super().update(db_obj=db_obj, obj_in=update_data)
 
-    def get_last_record_with_exchange_id(self, exchange_id):
+    def get_last_record_with_exchange_id(self, exchange_id) -> Deal:
         with SessionLocal() as session:
             return session.query(self.model).filter(self.model.exchange_id == exchange_id).order_by(self.model.id.desc()).first()
 
     def get_open_deals(self) -> List[ModelType]:
         with SessionLocal() as session:
-            return session.query(self.model).filter(self.model.date_close == None).all()
+            return session.query(self.model).filter(self.model.date_close == None).order_by(self.model.id.desc()).all()
 
-    def increment_safety_orders_count(self, record):
+    def increment_safety_orders_count(self, record) -> int:
         with SessionLocal() as session:
-            record.safety_order_count += 1
+            safety_count = record.safety_order_count + 1
+            record.safety_order_count = safety_count
             session.add(record)
             session.commit()
 
-            return True
+        return safety_count
 
 
 deal = CRUDDeal(Deal)

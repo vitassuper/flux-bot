@@ -24,7 +24,7 @@ def calculate_pnl_percentage(closePrice, avgPrice):
 
 
 def calculate_position_pnl_percentage(closePrice, avgPrice, leverage):
-    return calculate_pnl_percentage(closePrice, avgPrice) * float(leverage)
+    return calculate_pnl_percentage(closePrice, avgPrice) * Decimal(leverage)
 
 
 def calculate_position_pnl_for_position(close_price, avg_price, leverage, pos_side):

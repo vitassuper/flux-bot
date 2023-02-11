@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -8,16 +9,16 @@ from src.app.schemas.deals import DealUpdate
 from src.db.session import SessionLocal
 
 
-def create_deal(deal: DealCreate):
+def create_deal(deal: DealCreate) -> Deal:
     return repository.create(obj_in=deal)
 
 
-def increment_safety_orders_count(exchange_id: int):
+def increment_safety_orders_count(exchange_id: int) -> int:
     last_record = get_deal(exchange_id)
-    repository.increment_safety_orders_count(last_record)
+    return repository.increment_safety_orders_count(last_record)
 
 
-def get_deal(exchange_id: int):
+def get_deal(exchange_id: int) -> Deal:
     deal = repository.get_last_record_with_exchange_id(exchange_id)
 
     if not deal:
@@ -26,11 +27,11 @@ def get_deal(exchange_id: int):
     return deal
 
 
-def get_opened_deals():
+def get_opened_deals() -> List[Deal]:
     return repository.get_open_deals()
 
 
-def update_deal(exchange_id, obj_in: DealUpdate):
+def update_deal(exchange_id, obj_in: DealUpdate) -> Deal:
     deal = get_deal(exchange_id)
 
     if not deal:
