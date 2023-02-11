@@ -40,9 +40,10 @@ def get_stats_handler(update: Update, context: CallbackContext) -> None:
 
 def get_positions_handler(update: Update, context: CallbackContext) -> None:
     connector = Connector()
-    result = connector.get_open_positions()
+    result = connector.get_open_positions_info()
 
     update.message.reply_text(result)
+
 
 def run():
     updater = Updater(settings.TELEGRAM_BOT_TOKEN)
