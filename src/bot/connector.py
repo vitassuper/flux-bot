@@ -50,6 +50,10 @@ class Connector:
                 f"Cant {signal.type_of_signal}: {str(e)}")
             pass
 
+        except ccxt.BaseError as ccxt_error:
+            self.notificator.send_warning_notification(str(ccxt_error))
+            pass
+
     def get_position(self, pair: str):
         positions = self.okx.fetch_positions()
 
@@ -60,6 +64,15 @@ class Connector:
             raise ConnectorException('position not exists')
 
         return open_position
+
+    def ensure_deal_not_opened(self, pair: str):
+        positions = self.okx.fetch_positions()
+
+        open_position = next(
+            (p for p in positions if p["info"]["instId"] == pair), None)
+
+        if open_position:
+            raise ConnectorException('position already exists: {pair}')
 
     def convert_quote_to_contracts(self, symbol: str, amount: float) -> Tuple[int, float]:
         market = self.okx.market(symbol)
@@ -112,8 +125,7 @@ class Connector:
         self.notificator.send_notification(
             f"Received open signal: pair: {pair}, amount: {amount}")
 
-        if self.get_position(pair):
-            raise ConnectorException(f"position already exists pair: {pair}")
+        self.ensure_deal_not_opened(pair)
 
         quantity, contracts_cost = self.convert_quote_to_contracts(
             pair, amount)
