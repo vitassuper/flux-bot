@@ -5,7 +5,7 @@ from datetime import datetime
 from src.app.schemas.deals import DealCreate, DealUpdate
 from src.app import schemas
 
-from src.app.services.deal import create_deal, get_deal_by_exchange_id, get_opened_deals, increment_safety_orders_count, update_deal_by_exchange_id
+from src.app.services.deal import create_deal, get_deal, get_opened_deals, increment_safety_orders_count, update_deal
 from src.bot.exception import ConnectorException
 from src.bot.notificator import Notificator
 from decimal import Decimal, ROUND_DOWN
@@ -160,9 +160,9 @@ class Connector:
 
         result = self.okx.fetch_order(order["id"], symbol=pair)
 
-        deal = get_deal_by_exchange_id(open_position["info"]["posId"])
+        deal = get_deal(open_position["info"]["posId"])
 
-        update_deal_by_exchange_id(open_position["info"]["posId"], DealUpdate(
+        update_deal(open_position["info"]["posId"], DealUpdate(
             pnl=result["info"]["pnl"], date_close=datetime.fromtimestamp(result["timestamp"]/1000)))
 
         pnl = Decimal(result["info"]["pnl"]).quantize(
