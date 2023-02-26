@@ -1,12 +1,11 @@
+from datetime import datetime
 from typing import List
-from fastapi import Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
 
 from src.app.models import Deal
 from src.app.repositories.deal import deal as repository
 from src.app.schemas import DealCreate
 from src.app.schemas.deals import DealUpdate
-from src.db.session import SessionLocal
 
 
 def create_deal(deal: DealCreate) -> Deal:
@@ -29,6 +28,17 @@ def get_deal(exchange_id: int) -> Deal:
 
 def get_opened_deals() -> List[Deal]:
     return repository.get_open_deals()
+
+
+def get_total_pnl():
+    return repository.get_pnl_sum()
+
+
+def get_daily_pnl():
+    now = datetime.now()
+    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    return repository.get_pnl_sum(midnight)
 
 
 def update_deal(exchange_id, obj_in: DealUpdate) -> Deal:

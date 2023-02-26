@@ -7,7 +7,7 @@ from src.app import schemas
 
 from src.app.services.deal import create_deal, get_deal, get_opened_deals, increment_safety_orders_count, update_deal
 from src.bot.exception import ConnectorException
-from src.bot.notificator import Notificator
+from src.bot.notifier import Notifier
 from decimal import Decimal, ROUND_DOWN
 from src.bot.helper import calculate_position_pnl_for_position, get_time_duration_string
 
@@ -27,11 +27,12 @@ class Connector:
             }
         )
 
-        self.notificator = Notificator()
+        self.notifier = Notifier()
 
         self.okx.load_markets()
 
     def dispatch(self, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal]) -> None:
+        return
         try:
             match signal.type_of_signal:
                 case 'open':
@@ -46,12 +47,12 @@ class Connector:
                     raise ConnectorException('unknown type of signal')
 
         except ConnectorException as e:
-            self.notificator.send_warning_notification(
+            self.notifier.send_warning_notification(
                 f"Cant {signal.type_of_signal}: {str(e)}")
             pass
 
         except ccxt.BaseError as ccxt_error:
-            self.notificator.send_warning_notification(str(ccxt_error))
+            self.notifier.send_warning_notification(str(ccxt_error))
             pass
 
     def get_position(self, pair: str):
@@ -122,7 +123,7 @@ class Connector:
         return result
 
     def dispatch_open_short_position(self, pair: str, amount: float):
-        self.notificator.send_notification(
+        self.notifier.send_notification(
             f"Received open signal: pair: {pair}, amount: {amount}")
 
         self.ensure_deal_not_opened(pair)
@@ -141,11 +142,11 @@ class Connector:
         create_deal(DealCreate(
             pair=pair, exchange_id=open_position["info"]["posId"], date_open=datetime.now()))
 
-        self.notificator.send_notification(
+        self.notifier.send_notification(
             f"Opened position: {pair}, amount: {amount}")
 
     def dispatch_add_to_short_position(self, pair: str, amount: float):
-        self.notificator.send_notification(
+        self.notifier.send_notification(
             f"Received signal type: add, pair: {pair}, amount: {amount}")
 
         open_position = self.get_position(pair)
@@ -160,11 +161,11 @@ class Connector:
         safety_count = increment_safety_orders_count(
             open_position["info"]["posId"])
 
-        self.notificator.send_notification(
+        self.notifier.send_notification(
             f"Averaged position, pair: {pair}, amount: {amount} safety orders: {safety_count}")
 
     def dispatch_close_short_position(self, pair: str):
-        self.notificator.send_notification(
+        self.notifier.send_notification(
             f"Received signal type: close, pair: {pair}")
 
         open_position = self.get_position(pair)
@@ -190,7 +191,7 @@ class Connector:
         duration = get_time_duration_string(
             deal.date_open, datetime.fromtimestamp(result["timestamp"] / 1000))
 
-        self.notificator.send_notification((
+        self.notifier.send_notification((
             f"{result['symbol']}\n"
             f"Profit:{pnl}$ ({pnl_percentage}%)\n"
             f"Size: {result['info']['fillSz']}\n"

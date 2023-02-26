@@ -4,7 +4,7 @@ from telegram import Bot, TelegramError
 from src.core.config import settings
 
 
-class Notificator:
+class Notifier:
     def __init__(self):
         self.bot = Bot(settings.TELEGRAM_BOT_TOKEN)
         self.exchange_name = 'OKX'

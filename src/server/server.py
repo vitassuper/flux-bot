@@ -1,9 +1,8 @@
 from fastapi import FastAPI, Request, Response
-from src.bot.notificator import Notificator
+from src.bot.notifier import Notifier
 from src.core.config import settings
 from starlette.middleware.cors import CORSMiddleware
 from src.app.routes import signal
-from src.bot.connector import connector
 from fastapi.exceptions import RequestValidationError
 
 app = FastAPI(
@@ -13,8 +12,8 @@ app = FastAPI(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    notificator = Notificator()
-    notificator.send_warning_notification(f"{exc}")
+    notifier = Notifier()
+    notifier.send_warning_notification(f"{exc}")
 
     return Response(content="Validation Error", status_code=400)
 

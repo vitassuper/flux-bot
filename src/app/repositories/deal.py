@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Any, Dict, List, Union
 
-from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from src.app.repositories.base import CRUDBase, ModelType
 from src.app.models.deal import Deal
@@ -33,7 +34,7 @@ class CRUDDeal(CRUDBase[Deal, DealCreate, DealUpdate]):
 
             return super().update(db_obj=db_obj, obj_in=update_data)
 
-    def get_last_record_with_exchange_id(self, exchange_id) -> Deal:
+    def get_last_record_with_exchange_id(self, exchange_id: int) -> Deal:
         with SessionLocal() as session:
             return session.query(self.model).filter(self.model.exchange_id == exchange_id).order_by(self.model.id.desc()).first()
 
@@ -49,6 +50,18 @@ class CRUDDeal(CRUDBase[Deal, DealCreate, DealUpdate]):
             session.commit()
 
         return safety_count
+
+    def get_pnl_sum(self, start_date: datetime = None):
+        with SessionLocal() as session:
+            pnl_query = session.query(func.sum(self.model.pnl))
+
+            if start_date is None:
+                result = pnl_query.scalar()
+            else:
+                result = pnl_query.filter(
+                    self.model.date_close >= start_date).scalar()
+
+            return result or 0
 
 
 deal = CRUDDeal(Deal)
