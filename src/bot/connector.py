@@ -32,7 +32,6 @@ class Connector:
         self.okx.load_markets()
 
     def dispatch(self, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal]) -> None:
-        return
         try:
             match signal.type_of_signal:
                 case 'open':
