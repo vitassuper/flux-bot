@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     TELEGRAM_CHAT_ID: str
     TELEGRAM_CHAT_ID2: str
 
+    API_KEY_BINANCE: str
+    API_SECRET_BINANCE: str
+
     class Config:
         env_file = ".env"
         case_sensitive = True

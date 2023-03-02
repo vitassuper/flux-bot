@@ -10,7 +10,7 @@ packages = [{ include = "src" }]
 python = ">=3.10,<3.12"
 python-dotenv = "^0.21.0"
 python-telegram-bot = "^13.14"
-ccxt = "^2.4"
+ccxt = "^2.8"
 fastapi = "^0.88"
 pydantic = "^1.10.4"
 SQLAlchemy = "^1.4"

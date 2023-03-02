@@ -5,9 +5,9 @@ from src.core.config import settings
 
 
 class Notifier:
-    def __init__(self):
+    def __init__(self, exchange_name='Connector'):
         self.bot = Bot(settings.TELEGRAM_BOT_TOKEN)
-        self.exchange_name = 'OKX'
+        self.exchange_name = exchange_name
 
     def send_warning_notification(self, text):
         self.send_message(f"🚨{text}")
