@@ -1,8 +1,11 @@
+from decimal import Decimal
+from typing import List
 import ccxt
-import rsa
 from src.bot.exception import ConnectorException
 from src.bot.exchange.base import BaseExchange
+from src.bot.position import Position
 from src.core.config import settings
+from ccxt.base.decimal_to_precision import TRUNCATE
 
 
 class Binance(BaseExchange):
@@ -42,6 +45,40 @@ class Binance(BaseExchange):
             raise ConnectorException('position not exists')
 
         return open_position
+
+    def get_open_positions_info(self) -> List[Position]:
+        exchange_positions = self.exchange.fetch_positions_risk()
+        exchange_positions = [
+            position for position in exchange_positions if position['contracts']]
+        exchange_positions.sort(key=lambda item: item["info"]["symbol"])
+
+        tickers = self.exchange.fetch_tickers(
+            [item['info']['symbol'] for item in exchange_positions if 'info' in item and 'symbol' in item['info']])
+
+        positions = []
+
+        for item in exchange_positions:
+            symbol = item['symbol']
+
+            positions.append(
+                Position(
+                    ticker=item['info']['symbol'],
+                    margin=self.exchange.decimal_to_precision(
+                        item['initialMargin'], TRUNCATE, 4),
+                    avg_price=self.exchange.price_to_precision(
+                        symbol, item['entryPrice']),
+                    current_price=self.exchange.price_to_precision(
+                        symbol, tickers[symbol]['last']),
+                    liquidation_price=self.exchange.price_to_precision(
+                        symbol, item['liquidationPrice']),
+                    unrealized_pnl=self.exchange.decimal_to_precision(
+                        item['unrealizedPnl'], TRUNCATE, 4) + f" ({round(item['percentage'], 2)}%)",
+                    notional_size=self.exchange.decimal_to_precision(
+                        item['notional'], TRUNCATE, 3),
+                    deal=None
+                ))
+
+        return positions
 
     def dispatch_open_short_position(self, pair: str, amount: float):
         self.notifier.send_notification(

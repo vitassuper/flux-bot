@@ -14,3 +14,6 @@ class BaseExchange:
 
         if open_position:
             raise ConnectorException(f"position already exists: {pair}")
+
+    def get_open_positions_info():
+        pass

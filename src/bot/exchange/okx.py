@@ -7,7 +7,9 @@ from src.app.services.deal import create_deal, get_deal, get_opened_deals, incre
 from src.bot.exception import ConnectorException
 from src.bot.exchange.base import BaseExchange
 from src.bot.helper import calculate_position_pnl_for_position, get_time_duration_string
+from src.bot.position import Position
 from src.core.config import settings
+from ccxt.base.decimal_to_precision import TRUNCATE
 
 
 class Okex(BaseExchange):
@@ -63,38 +65,41 @@ class Okex(BaseExchange):
         return contracts_size, contracts_cost
 
     def get_open_positions_info(self):
-        positions = self.exchange.fetch_positions()
-        positions.sort(key=lambda item: item["info"]["instId"])
+        exchange_positions = self.exchange.fetch_positions()
+        exchange_positions.sort(key=lambda item: item["info"]["instId"])
 
         deals = get_opened_deals()
 
         tickers = self.exchange.fetch_tickers(
-            [item['info']['instId'] for item in positions if 'info' in item and 'instId' in item['info']])
+            [item['info']['instId'] for item in exchange_positions if 'info' in item and 'instId' in item['info']])
 
-        result = ""
-        for item in positions:
+        positions = []
+
+        for item in exchange_positions:
             deal = next((x for x in deals if x.pair ==
                         item["info"]["instId"]), None)
 
             symbol = item['symbol']
 
-            result += (
-                f"{item['info']['instId']}\n"
-                f"margin: {Decimal(item['info']['margin']).quantize(Decimal('0.001'))}\n"
-                f"currentPrice: {tickers[symbol]['last']}\n"
-                f"avgPrice: {self.exchange.price_to_precision(symbol, item['info']['avgPx'])}\n"
-                f"unrealizedPnl: {Decimal(item['unrealizedPnl']).quantize(Decimal('0.0001'))} ({round(item['percentage'], 2)}%)\n"
-                f"liquidationPrice: {self.exchange.price_to_precision(symbol, item['liquidationPrice'])}\n"
-                f"Pos size: {Decimal(item['info']['notionalUsd']).quantize(Decimal('0.001'))}💰\n"
-            )
+            positions.append(
+                Position(
+                    ticker=item['info']['instId'],
+                    margin=self.exchange.decimal_to_precision(
+                        item['info']['margin'], TRUNCATE, 4),
+                    avg_price=self.exchange.price_to_precision(
+                        symbol, item['info']['avgPx']),
+                    current_price=self.exchange.price_to_precision(
+                        symbol, tickers[symbol]['last']),
+                    liquidation_price=self.exchange.price_to_precision(
+                        symbol, item['liquidationPrice']),
+                    unrealized_pnl=self.exchange.decimal_to_precision(
+                        item['unrealizedPnl'], TRUNCATE, 4) + f" ({round(item['percentage'], 2)}%)",
+                    notional_size=self.exchange.decimal_to_precision(
+                        item['info']['notionalUsd'], TRUNCATE, 3),
+                    deal=deal
+                ))
 
-            if (deal):
-                result += (
-                    f"Duration: {get_time_duration_string(deal.date_open, datetime.now())}\n"
-                    f"Safety orders {deal.safety_order_count}\n\n"
-                )
-
-        return result
+        return positions
 
     def dispatch_open_short_position(self, pair: str, amount: float):
         self.notifier.send_notification(

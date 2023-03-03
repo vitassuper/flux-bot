@@ -8,7 +8,8 @@ from telegram.ext import (
 )
 from src.app.services.deal import get_daily_pnl, get_total_pnl
 
-from src.bot.connector import Connector
+from src.bot.exchange.binance import Binance
+from src.bot.exchange.okx import Okex
 from src.core.config import settings
 
 
@@ -45,10 +46,31 @@ class Telegram:
 
     @staticmethod
     def positions_handler(update: Update, context: CallbackContext) -> None:
-        connector = Connector()
-        result = connector.get_open_positions_info()
+        exchanges = [Binance(), Okex()]
 
-        update.message.reply_text(result)
+        text = ''
+
+        for exchange in exchanges:
+            text += f"{exchange.get_exchange_name()}:\n\n"
+
+            positions = exchange.get_open_positions_info()
+
+            for position in positions:
+                text += (
+                    f"{position.ticker}\n"
+                    f"Margin: {position.margin}\n"
+                    f"Current price: {position.current_price}\n"
+                    f"Avg price: {position.avg_price}\n"
+                    f"Unrealized PNL: {position.unrealized_pnl}\n"
+                    f"liquidationPrice: {position.liquidation_price}\n"
+                    f"Pos size: {position.notional_size}💰\n"
+                    f"Duration: {position.duration}\n"
+                    f"Safety orders {position.safety_orders_count}\n\n"
+                )
+
+            text += '\n'
+
+        update.message.reply_text(text)
 
     def __init__(self, token):
         self.initialize()
