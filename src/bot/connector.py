@@ -18,16 +18,17 @@ class Connector:
     def dispatch(self, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal]) -> None:
         try:
             exchange = self.get_exchange(signal.bot_id)
+            pair = exchange.guess_symbol_from_tv(signal.pair)
 
             match signal.type_of_signal:
                 case 'open':
                     exchange.dispatch_open_short_position(
-                        signal.pair, signal.amount)
+                        pair, signal.amount)
                 case 'close':
-                    exchange.dispatch_close_short_position(signal.pair)
+                    exchange.dispatch_close_short_position(pair)
                 case 'add':
                     exchange.dispatch_add_to_short_position(
-                        signal.pair, signal.amount)
+                        pair, signal.amount)
                 case _:
                     raise ConnectorException('unknown type of signal')
 

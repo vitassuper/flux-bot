@@ -20,7 +20,7 @@ class Okex(BaseExchange):
             },
         })
 
-        super().__init__(bot_id, exchange)
+        super().__init__(bot_id=bot_id, exchange=exchange)
 
     def get_opened_position(self, pair: str):
         positions = self.exchange.fetch_positions()

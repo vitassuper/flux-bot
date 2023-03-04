@@ -83,9 +83,9 @@ class BaseExchange(metaclass=abc.ABCMeta):
 
         self.set_leverage_for_short_position(pair, 20)
 
-        base_amount = self.get_base_amount(pair, amount)
+        base_amount = self.get_base_amount(symbol=pair, quote_amount=amount)
 
-        self.sell_short_position(pair, base_amount)
+        self.sell_short_position(pair=pair, amount=base_amount)
 
         # TODO: only for okex, should be refactored
         if self.bot_id == 1:
@@ -103,7 +103,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
         self.notifier.send_notification(
             f"Received signal type: close, pair: {pair}")
 
-        open_position = self.get_opened_position(pair)
+        open_position = self.get_opened_position(pair=pair)
 
         order = self.buy_short_position(pair, open_position["contracts"])
 
@@ -135,7 +135,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
 
         open_position = self.get_opened_position(pair=pair)
 
-        base_amount = self.get_base_amount(pair, amount)
+        base_amount = self.get_base_amount(symbol=pair, quote_amount=amount)
 
         self.sell_short_position(pair, base_amount)
 
@@ -186,3 +186,9 @@ class BaseExchange(metaclass=abc.ABCMeta):
                 ))
 
         return positions
+
+    # TODO: temp solution
+    def guess_symbol_from_tv(self, symbol: str):
+        base = symbol.split("USDT")[0]
+
+        return self.exchange.market(f'{base}/USDT:USDT')['id']
