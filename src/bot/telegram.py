@@ -46,7 +46,7 @@ class Telegram:
 
     @staticmethod
     def positions_handler(update: Update, context: CallbackContext) -> None:
-        exchanges = [Binance(), Okex()]
+        exchanges = [Binance(2), Okex(1)]
 
         text = ''
 
