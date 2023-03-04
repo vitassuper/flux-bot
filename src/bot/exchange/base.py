@@ -1,5 +1,6 @@
 import abc
 from datetime import datetime
+import re
 from src.app.schemas.deals import DealCreate, DealUpdate
 from src.app.services.deal import create_deal, get_deal, get_opened_deals, increment_safety_orders_count, update_deal
 from src.bot.helper import calculate_position_pnl_for_position, get_time_duration_string
@@ -190,5 +191,6 @@ class BaseExchange(metaclass=abc.ABCMeta):
     # TODO: temp solution
     def guess_symbol_from_tv(self, symbol: str):
         base = symbol.split("USDT")[0]
+        base = re.sub(r"[^a-zA-Z\d]+", "", base)
 
         return self.exchange.market(f'{base}/USDT:USDT')['id']
