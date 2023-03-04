@@ -42,9 +42,9 @@ class Connector:
 
     def get_exchange(self, bot_id):
         if bot_id == 1:
-            return Okex()
+            return Okex(bot_id)
         if bot_id == 2:
-            return Binance()
+            return Binance(bot_id)
 
         raise ConnectorException('Unknown bot id')
 

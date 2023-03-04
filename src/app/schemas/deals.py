@@ -8,17 +8,17 @@ from pydantic import BaseModel, Field
 class DealBase(BaseModel):
     id: Optional[int]
     pair: str = Field(max_length=255)
-    exchange_id: str = Field(max_length=255)
     safety_order_count: Optional[int]
     date_open: datetime
     date_close: Optional[datetime] = Field(default=None)
     pnl: Optional[float]
+    bot_id: Optional[int]
 
 
 # Properties to receive via API on creation
 class DealCreate(BaseModel):
+    bot_id: int
     pair: str = Field(max_length=255)
-    exchange_id: str = Field(max_length=255)
     date_open: datetime
     pnl: Optional[float]
 

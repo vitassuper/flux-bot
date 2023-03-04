@@ -14,9 +14,9 @@ class CRUDDeal(CRUDBase[Deal, DealCreate, DealUpdate]):
     def create(self, obj_in: DealCreate) -> Deal:
         db_obj = Deal(
             pair=obj_in.pair,
-            exchange_id=obj_in.exchange_id,
             date_open=obj_in.date_open,
-            pnl=obj_in.pnl
+            pnl=obj_in.pnl,
+            bot_id=obj_in.bot_id
         )
 
         with SessionLocal() as session:
@@ -34,9 +34,9 @@ class CRUDDeal(CRUDBase[Deal, DealCreate, DealUpdate]):
 
             return super().update(db_obj=db_obj, obj_in=update_data)
 
-    def get_last_record_with_exchange_id(self, exchange_id: int) -> Deal:
+    def get_bot_last_deal(self, bot_id: int, pair: str) -> Deal:
         with SessionLocal() as session:
-            return session.query(self.model).filter(self.model.exchange_id == exchange_id).order_by(self.model.id.desc()).first()
+            return session.query(self.model).filter(self.model.bot_id == bot_id, self.model.pair == pair).order_by(self.model.id.desc()).first()
 
     def get_open_deals(self) -> List[ModelType]:
         with SessionLocal() as session:

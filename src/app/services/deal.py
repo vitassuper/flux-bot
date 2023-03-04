@@ -12,13 +12,13 @@ def create_deal(deal: DealCreate) -> Deal:
     return repository.create(obj_in=deal)
 
 
-def increment_safety_orders_count(exchange_id: int) -> int:
-    last_record = get_deal(exchange_id)
+def increment_safety_orders_count(bot_id: int, pair: str) -> int:
+    last_record = get_deal(bot_id=bot_id, pair=pair)
     return repository.increment_safety_orders_count(last_record)
 
 
-def get_deal(exchange_id: int) -> Deal:
-    deal = repository.get_last_record_with_exchange_id(exchange_id)
+def get_deal(bot_id: int, pair: str) -> Deal:
+    deal = repository.get_bot_last_deal(bot_id, pair)
 
     if not deal:
         raise HTTPException(
@@ -41,8 +41,8 @@ def get_daily_pnl():
     return repository.get_pnl_sum(midnight)
 
 
-def update_deal(exchange_id, obj_in: DealUpdate) -> Deal:
-    deal = get_deal(exchange_id)
+def update_deal(bot_id: int, pair: str, obj_in: DealUpdate) -> Deal:
+    deal = get_deal(bot_id=bot_id, pair=pair)
 
     if not deal:
         raise HTTPException(
