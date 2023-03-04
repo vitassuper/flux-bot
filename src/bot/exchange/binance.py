@@ -70,9 +70,9 @@ class Binance(BaseExchange):
             amount=amount,
         )
 
-    def get_base_amount(self, pair: str, quote_amount: float):
-        market = self.exchange.market(pair)
-        price = self.exchange.fetch_ticker(pair)['last']
+    def get_base_amount(self, symbol: str, quote_amount: float):
+        market = self.exchange.market(symbol)
+        price = self.exchange.fetch_ticker(symbol)['last']
 
         min_notional_filter = next(
             filter(lambda x: x['filterType'] == 'MIN_NOTIONAL', market['info']['filters']))
@@ -84,6 +84,6 @@ class Binance(BaseExchange):
 
         if (quote_amount < minimal_amount):
             raise ConnectorException(
-                f"low amount for pair {pair} - min amount: {minimal_amount}")
+                f"low amount for pair {symbol} - min amount: {minimal_amount}")
 
-        return self.exchange.amount_to_precision(pair, amount=quote_amount / price)
+        return self.exchange.amount_to_precision(symbol, amount=quote_amount / price)
