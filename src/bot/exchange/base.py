@@ -57,6 +57,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
 
     # End Abstract methods
 
+    # TODO:add fee counting
     def calculate_realized_pnl(self, position, order):
         amount = order['amount']
 
@@ -77,9 +78,6 @@ class BaseExchange(metaclass=abc.ABCMeta):
         )
 
     def dispatch_open_short_position(self, pair: str, amount: float):
-        self.notifier.send_notification(
-            f"Received open signal: pair: {pair}, amount: {amount}")
-
         self.ensure_deal_not_opened(pair)
 
         self.set_leverage_for_short_position(pair, 20)
@@ -101,9 +99,6 @@ class BaseExchange(metaclass=abc.ABCMeta):
             f"Opened position: {pair}, amount: {amount}")
 
     def dispatch_close_short_position(self, pair: str):
-        self.notifier.send_notification(
-            f"Received signal type: close, pair: {pair}")
-
         open_position = self.get_opened_position(pair=pair)
 
         order = self.buy_short_position(pair, open_position["contracts"])
@@ -131,9 +126,6 @@ class BaseExchange(metaclass=abc.ABCMeta):
         ))
 
     def dispatch_add_to_short_position(self, pair: str, amount: float):
-        self.notifier.send_notification(
-            f"Received signal type: add, pair: {pair}, amount: {amount}")
-
         open_position = self.get_opened_position(pair=pair)
 
         base_amount = self.get_base_amount(symbol=pair, quote_amount=amount)

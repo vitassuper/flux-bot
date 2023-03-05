@@ -1,5 +1,5 @@
 import sys
-from telegram import Bot, TelegramError
+from telegram import Bot, TelegramError, constants
 
 from src.core.config import settings
 
@@ -22,7 +22,9 @@ class Notifier:
             if chatId:
                 self.bot.send_message(chatId, text)
             else:
-                self.bot.send_message(settings.TELEGRAM_CHAT_ID, text)
-                self.bot.send_message(settings.TELEGRAM_CHAT_ID2, text)
+                self.bot.send_message(
+                    chat_id=settings.TELEGRAM_CHAT_ID, text=text, parse_mode=constants.PARSEMODE_HTML)
+                self.bot.send_message(
+                    chat_id=settings.TELEGRAM_CHAT_ID2, text=text,  parse_mode=constants.PARSEMODE_HTML)
         except TelegramError as error:
             print(error.message, file=sys.stderr)

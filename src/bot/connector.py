@@ -18,6 +18,11 @@ class Connector:
     def dispatch(self, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal]) -> None:
         try:
             exchange = self.get_exchange(signal.bot_id)
+
+            # TODO: temp to check tv ticker
+            exchange.notifier.send_notification(f'Received <b>{signal.type_of_signal}</b> signal: pair: {signal.pair}' + (
+                f' amount: {signal.amount}' if hasattr(signal, 'amount') else ''))
+
             pair = exchange.guess_symbol_from_tv(signal.pair)
 
             match signal.type_of_signal:

@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     API_KEY_BINANCE: str
     API_SECRET_BINANCE: str
 
+    APP_KEY: str
+
     class Config:
         env_file = ".env"
         case_sensitive = True
