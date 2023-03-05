@@ -57,19 +57,23 @@ class BaseExchange(metaclass=abc.ABCMeta):
 
     # End Abstract methods
 
-    # TODO:add fee counting
     def calculate_realized_pnl(self, position, order):
-        amount = order['amount']
+        market = self.exchange.market(order['symbol'])
+
+        amount = order['amount'] * market['contractSize']
 
         entry_value = position['entryPrice'] * amount
         exit_value = order['average'] * amount
 
         u_pnl = exit_value - entry_value
 
-        if position['side'] == 'short':
-            return u_pnl * -1
+        open_fee = position['entryPrice'] * amount * market['taker']
+        close_fee = order['average'] * amount * market['taker']
 
-        return u_pnl
+        if position['side'] == 'short':
+            u_pnl = u_pnl * -1
+
+        return u_pnl - open_fee - close_fee
 
     def calculate_pnl_percentage(self, position, order):
         return calculate_position_pnl_for_position(
@@ -84,19 +88,24 @@ class BaseExchange(metaclass=abc.ABCMeta):
 
         base_amount = self.get_base_amount(symbol=pair, quote_amount=amount)
 
-        self.sell_short_position(pair=pair, amount=base_amount)
+        order = self.sell_short_position(pair=pair, amount=base_amount)
+
+        # TODO: it necessary for OKEX
+        order = self.get_order_status(order, pair)
+
+        market = self.exchange.market(order['symbol'])
+        quote_amount = order['amount'] * \
+            market['contractSize'] * order['average']
 
         # TODO: only for okex, should be refactored
         if self.bot_id == 1:
-            quantity, contracts_cost = self.convert_quote_to_contracts(
-                pair, amount)
-            self.add_margin_to_short_position(pair, contracts_cost * 0.06)
+            self.add_margin_to_short_position(pair, quote_amount * 0.06)
 
         create_deal(DealCreate(bot_id=self.bot_id,
                     pair=pair, date_open=datetime.now()))
 
         self.notifier.send_notification(
-            f"Opened position: {pair}, amount: {amount}")
+            f"Opened position: {pair}, size: {quote_amount}$")
 
     def dispatch_close_short_position(self, pair: str):
         open_position = self.get_opened_position(pair=pair)
@@ -117,10 +126,14 @@ class BaseExchange(metaclass=abc.ABCMeta):
         duration = get_time_duration_string(
             deal.date_open, datetime.fromtimestamp(datetime.now().timestamp()))
 
+        market = self.exchange.market(order['symbol'])
+        quote_amount = order['amount'] * \
+            market['contractSize'] * order['average']
+
         self.notifier.send_notification((
             f"{pair}\n"
             f"Profit:{self.exchange.decimal_to_precision(pnl, TRUNCATE, 4)}$ ({pnl_percentage}%)\n"
-            f"Size: {open_position['contracts']}\n"
+            f"Size: {quote_amount}$\n"
             f"Duration: {duration}\n"
             f"Safety orders: {deal.safety_order_count}"
         ))
@@ -130,19 +143,24 @@ class BaseExchange(metaclass=abc.ABCMeta):
 
         base_amount = self.get_base_amount(symbol=pair, quote_amount=amount)
 
-        self.sell_short_position(pair, base_amount)
+        order = self.sell_short_position(pair, base_amount)
+
+        # TODO: it necessary for OKEX
+        order = self.get_order_status(order, pair)
+
+        market = self.exchange.market(order['symbol'])
+        quote_amount = order['amount'] * \
+            market['contractSize'] * order['average']
 
         # TODO: only for okex, should be refactored
         if self.bot_id == 1:
-            quantity, contracts_cost = self.convert_quote_to_contracts(
-                pair, amount)
-            self.add_margin_to_short_position(pair, contracts_cost * 0.06)
+            self.add_margin_to_short_position(pair, quote_amount * 0.06)
 
         safety_count = increment_safety_orders_count(
             bot_id=self.bot_id, pair=pair)
 
         self.notifier.send_notification(
-            f"Averaged position, pair: {pair}, amount: {amount} safety orders: {safety_count}")
+            f"Averaged position, pair: {pair}, size: {quote_amount}$ safety orders: {safety_count}")
 
     def get_open_positions_info(self):
         deals = get_opened_deals()

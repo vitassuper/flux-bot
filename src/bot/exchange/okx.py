@@ -42,19 +42,6 @@ class Okex(BaseExchange):
         if open_position:
             raise ConnectorException(f"position already exists: {pair}")
 
-    def convert_quote_to_contracts(self, symbol: str, amount: float) -> Tuple[int, float]:
-        market = self.exchange.market(symbol)
-        price = self.exchange.fetch_ticker(symbol)["last"]
-
-        contracts_size = int(amount / price / market["contractSize"])
-
-        if not contracts_size:
-            raise ConnectorException(f"low amount for pair: {symbol}")
-
-        contracts_cost = contracts_size * price * market["contractSize"]
-
-        return contracts_size, contracts_cost
-
     def get_base_amount(self, symbol: str, quote_amount: float):
         market = self.exchange.market(symbol)
         price = self.exchange.fetch_ticker(symbol)["last"]
