@@ -1,3 +1,4 @@
+import asyncio
 from typing import Callable, Dict, List
 from telegram import ReplyKeyboardMarkup, Update, KeyboardButton
 from telegram.ext import (
@@ -7,9 +8,9 @@ from telegram.ext import (
     Filters,
 )
 from src.app.services.deal import get_daily_pnl, get_total_pnl
+from src.bot.exchange.async_binance import Binance
+from src.bot.exchange.async_okx import Okex
 
-from src.bot.exchange.binance import Binance
-from src.bot.exchange.okx import Okex
 from src.core.config import settings
 
 
@@ -46,29 +47,12 @@ class Telegram:
 
     @staticmethod
     def positions_handler(update: Update, context: CallbackContext) -> None:
-        exchanges = [Binance(2), Okex(1)]
+        exchanges = asyncio.run(get_all_positions())
 
         text = ''
 
-        for exchange in exchanges:
-            text += f"{exchange.get_exchange_name()}:\n\n"
-
-            positions = exchange.get_open_positions_info()
-
-            for position in positions:
-                text += (
-                    f"{position.ticker}\n"
-                    f"Margin: {position.margin}\n"
-                    f"Current price: {position.current_price}\n"
-                    f"Avg price: {position.avg_price}\n"
-                    f"Unrealized PNL: {position.unrealized_pnl}\n"
-                    f"liquidationPrice: {position.liquidation_price}\n"
-                    f"Pos size: {position.notional_size}💰\n"
-                    f"Duration: {position.duration}\n"
-                    f"Safety orders {position.safety_orders_count}\n\n"
-                )
-
-            text += '\n'
+        for positions in exchanges:
+            text += f"{positions}\n"
 
         update.message.reply_text(text)
 
@@ -86,3 +70,36 @@ class Telegram:
 
 def run():
     Telegram(settings.TELEGRAM_BOT_TOKEN)
+
+
+async def get_from_exchange(exchange):
+    text = f"{exchange.get_exchange_name()}:\n\n"
+    positions = await exchange.get_open_positions_info()
+
+    if not positions:
+        return text + 'No positions'
+
+    for position in positions:
+        text += (
+            f"{position.ticker}\n"
+            f"Margin: {position.margin}\n"
+            f"Current price: {position.current_price}\n"
+            f"Avg price: {position.avg_price}\n"
+            f"Unrealized PNL: {position.unrealized_pnl}\n"
+            f"liquidationPrice: {position.liquidation_price}\n"
+            f"Pos size: {position.notional_size}💰\n"
+            f"Duration: {position.duration}\n"
+            f"Safety orders {position.safety_orders_count}\n\n"
+        )
+
+    return text
+
+
+async def get_all_positions():
+    exchanges = [Binance(2), Okex(1)]
+    tasks = []
+
+    for exchange in exchanges:
+        tasks.append(asyncio.create_task(get_from_exchange(exchange=exchange)))
+
+    return await asyncio.gather(*tasks)
