@@ -174,4 +174,4 @@ class BaseExchange(metaclass=abc.ABCMeta):
         base = symbol.split("USDT")[0]
         base = re.sub(r"[^a-zA-Z\d]+", "", base)
 
-        return self.exchange.market(f'{base}/USDT:USDT')['id']
+        return self.exchange.market(f'{base}/USDT:USDT')['symbol']
