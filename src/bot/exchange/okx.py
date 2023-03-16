@@ -26,7 +26,7 @@ class Okex(BaseExchange):
         positions = self.exchange.fetch_positions()
 
         open_position = next(
-            (p for p in positions if p["info"]["instId"] == pair), None)
+            (p for p in positions if p["symbol"] == pair), None)
 
         if not open_position:
             raise ConnectorException('position not exists')
@@ -37,7 +37,7 @@ class Okex(BaseExchange):
         positions = self.exchange.fetch_positions()
 
         open_position = next(
-            (p for p in positions if p["info"]["instId"] == pair), None)
+            (p for p in positions if p["symbol"] == pair), None)
 
         if open_position:
             raise ConnectorException(f"position already exists: {pair}")
@@ -50,7 +50,7 @@ class Okex(BaseExchange):
 
     def fetch_opened_positions(self):
         exchange_positions = self.exchange.fetch_positions()
-        exchange_positions.sort(key=lambda item: item["info"]["instId"])
+        exchange_positions.sort(key=lambda item: item["symbol"])
 
         return exchange_positions
 

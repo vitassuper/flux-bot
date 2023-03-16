@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Union
 from src.app.models.deal import Deal
 from src.bot.helper import get_time_duration_string
 from src.bot.objects.base_position import BasePosition
@@ -11,7 +12,7 @@ class ActivePosition(BasePosition):
         margin: str,
         avg_price: str,
         current_price: str,
-        liquidation_price: str,
+        liquidation_price: Union[str, None],
         unrealized_pnl: str,
         notional_size: str,
         deal: Deal

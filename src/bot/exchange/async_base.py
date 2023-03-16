@@ -31,6 +31,9 @@ class BaseExchange:
                 deal = next((x for x in deals if x.pair ==
                             symbol), None)
 
+                liquidation_price = self.exchange.price_to_precision(
+                    symbol, item['liquidationPrice']) if item['liquidationPrice'] else None
+
                 positions.append(
                     ActivePosition(
                         pair=item['symbol'],
@@ -40,8 +43,7 @@ class BaseExchange:
                             symbol, item['entryPrice']),
                         current_price=self.exchange.price_to_precision(
                             symbol, tickers[symbol]['last']),
-                        liquidation_price=self.exchange.price_to_precision(
-                            symbol, item['liquidationPrice']),
+                        liquidation_price=liquidation_price,
                         unrealized_pnl=self.exchange.decimal_to_precision(
                             item['unrealizedPnl'], TRUNCATE, 4) + f" ({round(item['percentage'], 2)}%)",
                         notional_size=self.exchange.decimal_to_precision(

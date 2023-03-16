@@ -23,6 +23,6 @@ class Okex(BaseExchange):
     async def fetch_opened_positions(self):
         async with self as exchange:
             exchange_positions = await exchange.fetch_positions()
-            exchange_positions.sort(key=lambda item: item["info"]["instId"])
+            exchange_positions.sort(key=lambda item: item["symbol"])
 
             return exchange_positions
