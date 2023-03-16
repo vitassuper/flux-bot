@@ -1,5 +1,5 @@
 from src.app.services.deal import get_opened_deals
-from src.bot.position import Position
+from src.bot.objects.active_position import ActivePosition
 from ccxt.base.decimal_to_precision import TRUNCATE
 
 
@@ -32,8 +32,8 @@ class BaseExchange:
                             symbol), None)
 
                 positions.append(
-                    Position(
-                        ticker=item['symbol'],
+                    ActivePosition(
+                        pair=item['symbol'],
                         margin=self.exchange.decimal_to_precision(
                             item['initialMargin'], TRUNCATE, 4),
                         avg_price=self.exchange.price_to_precision(

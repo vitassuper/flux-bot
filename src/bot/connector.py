@@ -10,30 +10,29 @@ from src.bot.notifier import Notifier
 
 
 class Connector:
-    def __init__(self):
-        self.notifier = Notifier()
-
-        pass
-
     def dispatch(self, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal]) -> None:
         try:
-            exchange = self.get_exchange(signal.bot_id)
+            self.exchange = self.get_exchange(signal.bot_id)
+            self.notifier = Notifier(
+                exchange_name=self.exchange.get_exchange_name())
 
             # TODO: temp to check tv ticker
-            exchange.notifier.send_notification(f'Received <b>{signal.type_of_signal}</b> signal: pair: {signal.pair}' + (
+            self.notifier.send_notification(f'Received <b>{signal.type_of_signal}</b> signal: pair: {signal.pair}' + (
                 f' amount: {signal.amount}' if hasattr(signal, 'amount') else ''))
 
-            pair = exchange.guess_symbol_from_tv(signal.pair)
+            pair = self.exchange.guess_symbol_from_tv(signal.pair)
 
             match signal.type_of_signal:
                 case 'open':
-                    exchange.dispatch_open_short_position(
-                        pair, signal.amount)
-                case 'close':
-                    exchange.dispatch_close_short_position(pair)
+                    self.dispatch_open_short_position(
+                        pair=pair, amount=signal.amount)
+
                 case 'add':
-                    exchange.dispatch_add_to_short_position(
-                        pair, signal.amount)
+                    self.dispatch_add_to_short_position(
+                        pair=pair, amount=signal.amount)
+
+                case 'close':
+                    self.dispatch_close_short_position(pair=pair)
                 case _:
                     raise ConnectorException('unknown type of signal')
 
@@ -45,6 +44,32 @@ class Connector:
         except ccxt.BaseError as ccxt_error:
             self.notifier.send_warning_notification(str(ccxt_error))
             pass
+
+    def dispatch_open_short_position(self, pair: str, amount: float):
+        opened_position = self.exchange.dispatch_open_short_position(
+            pair=pair, amount=amount)
+
+        self.notifier.send_notification(
+            f"Opened position: {opened_position.pair}, size: {opened_position.quote_amount}$")
+
+    def dispatch_add_to_short_position(self, pair: str, amount: float):
+        averaged_position = self.exchange.dispatch_add_to_short_position(
+            pair=pair, amount=amount)
+
+        self.notifier.send_notification(
+            f"Averaged position, pair: {averaged_position.pair}, size: {averaged_position.quote_amount}$ safety orders: {averaged_position.safety_orders_count}")
+
+    def dispatch_close_short_position(self, pair: str):
+        closed_position = self.exchange.dispatch_close_short_position(
+            pair=pair)
+
+        self.notifier.send_notification((
+            f"{pair}\n"
+            f"Profit:{closed_position.profit}💰💰💰 ({closed_position.profit_percentage}%)\n"
+            f"Size: {closed_position.quote_amount}$\n"
+            f"Duration: {closed_position.duration}\n"
+            f"Safety orders: {closed_position.safety_orders_count}"
+        ))
 
     def get_exchange(self, bot_id):
         if bot_id == 1:

@@ -16,6 +16,7 @@ class Binance(BaseExchange):
             'options': {
                 'defaultType': 'future',
             },
+            'enableRateLimit': True
         })
 
         super().__init__(bot_id=bot_id, exchange=exchange)

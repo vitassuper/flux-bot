@@ -1,12 +1,13 @@
 from datetime import datetime
 from src.app.models.deal import Deal
 from src.bot.helper import get_time_duration_string
+from src.bot.objects.base_position import BasePosition
 
 
-class Position:
+class ActivePosition(BasePosition):
     def __init__(
         self,
-        ticker: str,
+        pair: str,
         margin: str,
         avg_price: str,
         current_price: str,
@@ -15,7 +16,6 @@ class Position:
         notional_size: str,
         deal: Deal
     ):
-        self.ticker = ticker
         self.margin = margin
         self.avg_price = avg_price
         self.current_price = current_price
@@ -32,3 +32,6 @@ class Position:
 
         self.duration = duration
         self.safety_orders_count = safety_orders_count
+
+        # TODO: notional size not the same like quote amount
+        super().__init__(pair=pair, quote_amount=notional_size)

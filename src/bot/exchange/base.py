@@ -2,10 +2,12 @@ import abc
 from datetime import datetime
 import re
 from src.app.schemas.deals import DealCreate, DealUpdate
-from src.app.services.deal import create_deal, get_deal, get_opened_deals, increment_safety_orders_count, update_deal
+from src.app.services.deal import create_deal, get_deal, increment_safety_orders_count, update_deal
 from src.bot.helper import calculate_position_pnl_for_position, get_time_duration_string
 from src.bot.notifier import Notifier
-from src.bot.position import Position
+from src.bot.objects.averaged_position import AveragedPosition
+from src.bot.objects.closed_position import ClosedPosition
+from src.bot.objects.opened_position import OpenedPosition
 from ccxt.base.decimal_to_precision import TRUNCATE
 
 
@@ -102,10 +104,9 @@ class BaseExchange(metaclass=abc.ABCMeta):
             self.add_margin_to_short_position(pair, quote_amount * 0.06)
 
         create_deal(DealCreate(bot_id=self.bot_id,
-                    pair=pair, date_open=datetime.now()))
+                    pair=order['symbol'], date_open=datetime.now()))
 
-        self.notifier.send_notification(
-            f"Opened position: {pair}, size: {quote_amount}$")
+        return OpenedPosition(pair=pair, quote_amount=self.exchange.cost_to_precision(order['symbol'], quote_amount))
 
     def dispatch_close_short_position(self, pair: str):
         open_position = self.get_opened_position(pair=pair)
@@ -121,7 +122,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
         pnl_percentage = self.calculate_pnl_percentage(open_position, order)
 
         update_deal(bot_id=self.bot_id, pair=pair, obj_in=DealUpdate(
-            pnl=pnl, date_close=datetime.fromtimestamp(datetime.now().timestamp())))
+            pnl=pnl, date_close=datetime.now()))
 
         duration = get_time_duration_string(
             deal.date_open, datetime.fromtimestamp(datetime.now().timestamp()))
@@ -130,13 +131,15 @@ class BaseExchange(metaclass=abc.ABCMeta):
         quote_amount = order['amount'] * \
             market['contractSize'] * order['average']
 
-        self.notifier.send_notification((
-            f"{pair}\n"
-            f"Profit:{self.exchange.decimal_to_precision(pnl, TRUNCATE, 4)}$ ({pnl_percentage}%)\n"
-            f"Size: {quote_amount}$\n"
-            f"Duration: {duration}\n"
-            f"Safety orders: {deal.safety_order_count}"
-        ))
+        return ClosedPosition(
+            pair=pair,
+            quote_amount=self.exchange.cost_to_precision(
+                order['symbol'], quote_amount),
+            safety_orders_count=deal.safety_order_count,
+            duration=duration,
+            profit=self.exchange.decimal_to_precision(pnl, TRUNCATE, 4),
+            profit_percentage=pnl_percentage
+        )
 
     def dispatch_add_to_short_position(self, pair: str, amount: float):
         open_position = self.get_opened_position(pair=pair)
@@ -159,44 +162,12 @@ class BaseExchange(metaclass=abc.ABCMeta):
         safety_count = increment_safety_orders_count(
             bot_id=self.bot_id, pair=pair)
 
-        self.notifier.send_notification(
-            f"Averaged position, pair: {pair}, size: {quote_amount}$ safety orders: {safety_count}")
-
-    def get_open_positions_info(self):
-        deals = get_opened_deals()
-
-        exchange_positions = self.fetch_opened_positions()
-
-        tickers = self.exchange.fetch_tickers(
-            [item['symbol'] for item in exchange_positions])
-
-        positions = []
-
-        for item in exchange_positions:
-            symbol = item['symbol']
-
-            deal = next((x for x in deals if x.pair ==
-                        symbol), None)
-
-            positions.append(
-                Position(
-                    ticker=item['symbol'],
-                    margin=self.exchange.decimal_to_precision(
-                        item['initialMargin'], TRUNCATE, 4),
-                    avg_price=self.exchange.price_to_precision(
-                        symbol, item['entryPrice']),
-                    current_price=self.exchange.price_to_precision(
-                        symbol, tickers[symbol]['last']),
-                    liquidation_price=self.exchange.price_to_precision(
-                        symbol, item['liquidationPrice']),
-                    unrealized_pnl=self.exchange.decimal_to_precision(
-                        item['unrealizedPnl'], TRUNCATE, 4) + f" ({round(item['percentage'], 2)}%)",
-                    notional_size=self.exchange.decimal_to_precision(
-                        item['notional'], TRUNCATE, 3),
-                    deal=deal
-                ))
-
-        return positions
+        return AveragedPosition(
+            pair=pair,
+            quote_amount=self.exchange.cost_to_precision(
+                order['symbol'], quote_amount),
+            safety_orders_count=safety_count
+        )
 
     # TODO: temp solution
     def guess_symbol_from_tv(self, symbol: str):

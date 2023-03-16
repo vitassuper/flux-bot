@@ -1,4 +1,3 @@
-from typing import Tuple
 import ccxt
 from src.bot.exception import ConnectorException
 from src.bot.exchange.base import BaseExchange
@@ -18,6 +17,7 @@ class Okex(BaseExchange):
             "options": {
                 "defaultType": "swap",
             },
+            'enableRateLimit': True
         })
 
         super().__init__(bot_id=bot_id, exchange=exchange)
@@ -69,25 +69,13 @@ class Okex(BaseExchange):
         )
 
     def sell_short_position(self, pair: str, amount: int):
-        return self.exchange.create_order(
-            symbol=pair,
-            side="sell",
-            type="market",
-            amount=amount,
-            params={
-                "posSide": "short",
-                "tdMode": "isolated",
-            },
-        )
+        return self.exchange.create_market_sell_order(symbol=pair, amount=amount, params={
+            "posSide": "short",
+            "tdMode": "isolated",
+        },)
 
     def buy_short_position(self, pair: str, amount: int):
-        return self.exchange.create_order(
-            symbol=pair,
-            side="buy",
-            type="market",
-            amount=amount,
-            params={
-                "posSide": "short",
-                "tdMode": "isolated",
-            },
-        )
+        return self.exchange.create_market_buy_order(symbol=pair, amount=amount, params={
+            "posSide": "short",
+            "tdMode": "isolated",
+        })

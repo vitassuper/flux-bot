@@ -6,13 +6,11 @@ from src.bot.exception import ConnectorException
 
 def get_time_duration_string(date_open: datetime, date_close: datetime) -> str:
     diff = date_close - date_open
-    seconds_duration = diff.total_seconds()
+    seconds = int(diff.total_seconds())
 
-    days, seconds = divmod(seconds_duration, 86400)
-    hours, seconds = divmod(seconds_duration, 3600)
-    minutes, seconds = divmod(seconds_duration, 60)
-
-    hours, minutes = divmod(minutes, 60)
+    days, seconds = divmod(seconds, 86400)
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
 
     return f"{int(days)} days, {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds"
 
