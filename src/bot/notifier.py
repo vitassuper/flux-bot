@@ -10,14 +10,14 @@ class Notifier:
         self.exchange_name = exchange_name
 
     def send_warning_notification(self, text):
-        self.send_message(f"🚨{text}")
+        self.send_message(f'🚨{text}')
 
     def send_notification(self, text, chatId=None):
         self.send_message(text, chatId)
 
     def send_message(self, text, chatId=None):
         try:
-            text = f"{self.exchange_name}:\n{text}"
+            text = f'{self.exchange_name}:\n{text}'
 
             if chatId:
                 self.bot.send_message(chatId, text)

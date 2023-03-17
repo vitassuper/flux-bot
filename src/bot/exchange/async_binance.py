@@ -24,6 +24,6 @@ class Binance(BaseExchange):
             exchange_positions = await exchange.fetch_positions_risk()
             exchange_positions = [
                 position for position in exchange_positions if position['contracts']]
-            exchange_positions.sort(key=lambda item: item["info"]["symbol"])
+            exchange_positions.sort(key=lambda item: item['info']['symbol'])
 
             return exchange_positions

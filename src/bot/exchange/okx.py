@@ -11,11 +11,11 @@ class Okex(BaseExchange):
 
     def __init__(self, bot_id: int) -> None:
         exchange = ccxt.okex({
-            "apiKey": settings.API_KEY,
-            "secret": settings.API_SECRET,
-            "password": settings.API_PASSWORD,
-            "options": {
-                "defaultType": "swap",
+            'apiKey': settings.API_KEY,
+            'secret': settings.API_SECRET,
+            'password': settings.API_PASSWORD,
+            'options': {
+                'defaultType': 'swap',
             },
             'enableRateLimit': True
         })
@@ -26,7 +26,7 @@ class Okex(BaseExchange):
         positions = self.exchange.fetch_positions()
 
         open_position = next(
-            (p for p in positions if p["symbol"] == pair), None)
+            (p for p in positions if p['symbol'] == pair), None)
 
         if not open_position:
             raise ConnectorException('position not exists')
@@ -37,20 +37,20 @@ class Okex(BaseExchange):
         positions = self.exchange.fetch_positions()
 
         open_position = next(
-            (p for p in positions if p["symbol"] == pair), None)
+            (p for p in positions if p['symbol'] == pair), None)
 
         if open_position:
-            raise ConnectorException(f"position already exists: {pair}")
+            raise ConnectorException(f'position already exists: {pair}')
 
     def get_base_amount(self, symbol: str, quote_amount: float):
         market = self.exchange.market(symbol)
-        price = self.exchange.fetch_ticker(symbol)["last"]
+        price = self.exchange.fetch_ticker(symbol)['last']
 
-        return int(quote_amount / price / market["contractSize"])
+        return int(quote_amount / price / market['contractSize'])
 
     def fetch_opened_positions(self):
         exchange_positions = self.exchange.fetch_positions()
-        exchange_positions.sort(key=lambda item: item["symbol"])
+        exchange_positions.sort(key=lambda item: item['symbol'])
 
         return exchange_positions
 
@@ -59,23 +59,23 @@ class Okex(BaseExchange):
 
     def add_margin_to_short_position(self, pair: str, amount: float):
         self.exchange.add_margin(symbol=pair, amount=amount,
-                                 params={"posSide": "short"})
+                                 params={'posSide': 'short'})
 
     def set_leverage_for_short_position(self, pair: str, leverage: int):
         self.exchange.set_leverage(
             leverage=leverage,
             symbol=pair,
-            params={"mgnMode": "isolated", "posSide": "short"},
+            params={'mgnMode': 'isolated', 'posSide': 'short'},
         )
 
     def sell_short_position(self, pair: str, amount: int):
         return self.exchange.create_market_sell_order(symbol=pair, amount=amount, params={
-            "posSide": "short",
-            "tdMode": "isolated",
+            'posSide': 'short',
+            'tdMode': 'isolated',
         },)
 
     def buy_short_position(self, pair: str, amount: int):
         return self.exchange.create_market_buy_order(symbol=pair, amount=amount, params={
-            "posSide": "short",
-            "tdMode": "isolated",
+            'posSide': 'short',
+            'tdMode': 'isolated',
         })

@@ -22,7 +22,7 @@ def get_deal(bot_id: int, pair: str) -> Deal:
 
     if not deal:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
+            status_code=status.HTTP_404_NOT_FOUND, detail='Deal not found')
     return deal
 
 
@@ -47,7 +47,7 @@ def update_deal(bot_id: int, pair: str, obj_in: DealUpdate) -> Deal:
     if not deal:
         raise HTTPException(
             status_code=404,
-            detail="The deal with this id does not exist in the system",
+            detail='The deal with this id does not exist in the system',
         )
     deal = repository.update(deal, obj_in)
     return deal

@@ -22,7 +22,7 @@ target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
+# my_important_option = config.get_main_option('my_important_option')
 # ... etc.
 
 
@@ -31,7 +31,7 @@ def get_url():
     password = settings.POSTGRES_PASSWORD
     server = settings.POSTGRES_SERVER
     db = settings.POSTGRES_DB
-    return f"postgresql://{user}:{password}@{server}/{db}"
+    return f'postgresql://{user}:{password}@{server}/{db}'
 
 
 def run_migrations_offline():
@@ -63,9 +63,9 @@ def run_migrations_online():
 
     """
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = get_url()
+    configuration['sqlalchemy.url'] = get_url()
     connectable = engine_from_config(
-        configuration, prefix="sqlalchemy.", poolclass=pool.NullPool,
+        configuration, prefix='sqlalchemy.', poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:

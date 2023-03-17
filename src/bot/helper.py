@@ -12,13 +12,13 @@ def get_time_duration_string(date_open: datetime, date_close: datetime) -> str:
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
 
-    return f"{int(days)} days, {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds"
+    return f'{int(days)} days, {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds'
 
 
 def calculate_pnl_percentage(closePrice, avgPrice):
     return Decimal(
         ((closePrice - avgPrice) / avgPrice) * 100
-    ).quantize(Decimal("0.01"))
+    ).quantize(Decimal('0.01'))
 
 
 def calculate_position_pnl_percentage(closePrice, avgPrice, leverage):
@@ -34,9 +34,9 @@ def calculate_pnl_for_position(close_price, avg_price, pos_side):
 
 
 def get_percentage_sign(pos_side):
-    if pos_side == "short":
+    if pos_side == 'short':
         return -1
-    if pos_side == "long":
+    if pos_side == 'long':
         return 1
 
     raise ConnectorException('undefined position direction')

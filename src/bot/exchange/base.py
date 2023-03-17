@@ -111,7 +111,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
     def dispatch_close_short_position(self, pair: str):
         open_position = self.get_opened_position(pair=pair)
 
-        order = self.buy_short_position(pair, open_position["contracts"])
+        order = self.buy_short_position(pair, open_position['contracts'])
 
         # TODO: it necessary for OKEX
         order = self.get_order_status(order, pair)
@@ -171,7 +171,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
 
     # TODO: temp solution
     def guess_symbol_from_tv(self, symbol: str):
-        base = symbol.split("USDT")[0]
-        base = re.sub(r"[^a-zA-Z\d]+", "", base)
+        base = symbol.split('USDT')[0]
+        base = re.sub(r'[^a-zA-Z\d]+', '', base)
 
         return self.exchange.market(f'{base}/USDT:USDT')['symbol']

@@ -14,7 +14,7 @@ async def verify_secret(request: Request):
     
 router = APIRouter(dependencies=[Depends(verify_secret)])
 
-@router.post("")
+@router.post('')
 async def open_signal(*, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal] = Body(..., discriminator='type_of_signal'), background_tasks: BackgroundTasks) -> Any:
     background_tasks.add_task(connector.dispatch, signal)
     

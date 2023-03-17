@@ -28,7 +28,7 @@ class Binance(BaseExchange):
             (p for p in positions if p['contracts']), None)
 
         if open_position:
-            raise ConnectorException(f"position already exists: {pair}")
+            raise ConnectorException(f'position already exists: {pair}')
 
     def get_opened_position(self, pair: str):
         positions = self.exchange.fetch_positions_risk([pair])
@@ -45,7 +45,7 @@ class Binance(BaseExchange):
         exchange_positions = self.exchange.fetch_positions_risk()
         exchange_positions = [
             position for position in exchange_positions if position['contracts']]
-        exchange_positions.sort(key=lambda item: item["info"]["symbol"])
+        exchange_positions.sort(key=lambda item: item['info']['symbol'])
 
         return exchange_positions
 
@@ -58,16 +58,16 @@ class Binance(BaseExchange):
     def buy_short_position(self, pair: str, amount: int):
         return self.exchange.create_order(
             symbol=pair,
-            side="buy",
-            type="market",
+            side='buy',
+            type='market',
             amount=amount,
         )
 
     def sell_short_position(self, pair: str, amount: int):
         return self.exchange.create_order(
             symbol=pair,
-            side="sell",
-            type="market",
+            side='sell',
+            type='market',
             amount=amount,
         )
 
@@ -85,6 +85,6 @@ class Binance(BaseExchange):
 
         if (quote_amount < minimal_amount):
             raise ConnectorException(
-                f"low amount for pair {symbol} - min amount: {minimal_amount}")
+                f'low amount for pair {symbol} - min amount: {minimal_amount}')
 
         return self.exchange.amount_to_precision(symbol, amount=quote_amount / price)

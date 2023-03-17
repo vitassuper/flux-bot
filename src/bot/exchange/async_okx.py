@@ -6,11 +6,11 @@ from src.core.config import settings
 class Okex(BaseExchange):
     def __init__(self, bot_id: int) -> None:
         exchange = ccxt.okex({
-            "apiKey": settings.API_KEY,
-            "secret": settings.API_SECRET,
-            "password": settings.API_PASSWORD,
-            "options": {
-                "defaultType": "swap",
+            'apiKey': settings.API_KEY,
+            'secret': settings.API_SECRET,
+            'password': settings.API_PASSWORD,
+            'options': {
+                'defaultType': 'swap',
             },
             'enableRateLimit': True
         })
@@ -23,6 +23,6 @@ class Okex(BaseExchange):
     async def fetch_opened_positions(self):
         async with self as exchange:
             exchange_positions = await exchange.fetch_positions()
-            exchange_positions.sort(key=lambda item: item["symbol"])
+            exchange_positions.sort(key=lambda item: item['symbol'])
 
             return exchange_positions

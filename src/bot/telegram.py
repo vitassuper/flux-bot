@@ -28,10 +28,10 @@ class Telegram:
     @staticmethod
     def start_handler(update: Update, context: CallbackContext) -> None:
         keyboard = [
-            [KeyboardButton("Get positions"), KeyboardButton("Get stats")]]
+            [KeyboardButton('Get positions'), KeyboardButton('Get stats')]]
 
         update.message.reply_text(
-            "Choose a command",
+            'Choose a command',
             reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
         )
 
@@ -41,8 +41,8 @@ class Telegram:
         daily_png = get_daily_pnl()
 
         update.message.reply_text(
-            f"Daily PNL: {daily_png}\n"
-            f"Total PNL: {total_pnl}"
+            f'Daily PNL: {daily_png}\n'
+            f'Total PNL: {total_pnl}'
         )
 
     @staticmethod
@@ -52,7 +52,7 @@ class Telegram:
         text = ''
 
         for positions in exchanges:
-            text += f"{positions}\n"
+            text += f'{positions}\n'
 
         update.message.reply_text(text)
 
@@ -73,7 +73,7 @@ def run():
 
 
 async def get_from_exchange(exchange):
-    text = f"{exchange.get_exchange_name()}:\n\n"
+    text = f'{exchange.get_exchange_name()}:\n\n'
     positions = await exchange.get_open_positions_info()
 
     if not positions:
@@ -81,15 +81,15 @@ async def get_from_exchange(exchange):
 
     for position in positions:
         text += (
-            f"{position.pair}\n"
-            f"Margin: {position.margin}\n"
-            f"Current price: {position.current_price}\n"
-            f"Avg price: {position.avg_price}\n"
-            f"Unrealized PNL: {position.unrealized_pnl}\n"
-            f"liquidationPrice: {position.liquidation_price}\n"
-            f"Pos size: {position.notional_size}💰\n"
-            f"Duration: {position.duration}\n"
-            f"Safety orders {position.safety_orders_count}\n\n"
+            f'{position.pair}\n'
+            f'Margin: {position.margin}\n'
+            f'Current price: {position.current_price}\n'
+            f'Avg price: {position.avg_price}\n'
+            f'Unrealized PNL: {position.unrealized_pnl}\n'
+            f'liquidationPrice: {position.liquidation_price}\n'
+            f'Pos size: {position.notional_size}💰\n'
+            f'Duration: {position.duration}\n'
+            f'Safety orders {position.safety_orders_count}\n\n'
         )
 
     return text
