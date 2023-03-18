@@ -4,7 +4,7 @@ from decimal import Decimal
 from src.bot.exception import ConnectorException
 
 
-def get_time_duration_string(date_open: datetime, date_close: datetime = datetime.now()) -> str:
+def get_time_duration_string(date_open: datetime, date_close: datetime) -> str:
     diff = date_close - date_open
     seconds = int(diff.total_seconds())
 

@@ -135,7 +135,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         update_deal(bot_id=self.bot_id, pair=pair, obj_in=DealUpdate(
             pnl=pnl, date_close=datetime.now()))
 
-        duration = get_time_duration_string(deal.date_open)
+        duration = get_time_duration_string(
+            date_open=deal.date_open, date_close=datetime.now())
 
         market = self.exchange.exchange.market(order['symbol'])
         quote_amount = order['amount'] * \

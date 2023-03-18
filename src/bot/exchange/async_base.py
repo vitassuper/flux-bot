@@ -48,7 +48,8 @@ class BaseExchange:
                             item['unrealizedPnl'], TRUNCATE, 4) + f" ({round(item['percentage'], 2)}%)",
                         notional_size=self.exchange.decimal_to_precision(
                             item['notional'], TRUNCATE, 3),
-                        deal=deal
+                        deal=deal,
+                        side=item['side']
                     ))
 
             return positions

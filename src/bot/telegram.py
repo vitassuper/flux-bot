@@ -82,6 +82,7 @@ async def get_from_exchange(exchange):
     for position in positions:
         text += (
             f'{position.pair}\n'
+            f"{position.side.capitalize()} {'🟥' if position.side == 'short' else '🟩'}\n"
             f'Margin: {position.margin}\n'
             f'Current price: {position.current_price}\n'
             f'Avg price: {position.avg_price}\n'

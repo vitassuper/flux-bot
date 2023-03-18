@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union
+from typing import Literal, Union
 from src.app.models.deal import Deal
 from src.bot.helper import get_time_duration_string
 from src.bot.objects.base_position import BasePosition
@@ -15,7 +15,8 @@ class ActivePosition(BasePosition):
         liquidation_price: Union[str, None],
         unrealized_pnl: str,
         notional_size: str,
-        deal: Deal
+        deal: Deal,
+        side: Union[Literal['long'], Literal['short']]
     ):
         self.margin = margin
         self.avg_price = avg_price
@@ -23,6 +24,7 @@ class ActivePosition(BasePosition):
         self.liquidation_price = liquidation_price
         self.unrealized_pnl = unrealized_pnl
         self.notional_size = notional_size
+        self.side = side
 
         duration = 'unknown'
         safety_orders_count = 'unknown'
