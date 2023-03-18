@@ -51,7 +51,7 @@ class Binance(BaseExchange):
         if not open_position:
             raise ConnectorException(f'position already exists: {pair}')
 
-    def get_opened_position(self, pair: str):
+    def get_opened_short_position(self, pair: str):
         positions = self.exchange.fetch_positions_risk([pair])
 
         open_position = next(
@@ -61,6 +61,9 @@ class Binance(BaseExchange):
             raise ConnectorException('position not exists')
 
         return open_position
+
+    def get_opened_long_position(self, pair: str):
+        raise NotImplementedError('This function is not implemented yet.')
 
     def get_order_status(self, order, pair):
         return order

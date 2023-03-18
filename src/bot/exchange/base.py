@@ -71,7 +71,11 @@ class BaseExchange(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def get_opened_position(self, pair: str):
+    def get_opened_short_position(self, pair: str):
+        pass
+
+    @abc.abstractmethod
+    def get_opened_long_position(self, pair: str):
         pass
 
     # End Abstract methods

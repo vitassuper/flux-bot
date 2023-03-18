@@ -23,11 +23,22 @@ class Okex(BaseExchange):
 
         super().__init__(bot_id=bot_id, exchange=exchange)
 
-    def get_opened_position(self, pair: str):
+    def get_opened_long_position(self, pair: str):
         positions = self.exchange.fetch_positions()
 
         open_position = next(
-            (p for p in positions if p['symbol'] == pair), None)
+            (p for p in positions if p['symbol'] == pair and p['side'] == 'long'), None)
+
+        if not open_position:
+            raise ConnectorException('position not exists')
+
+        return open_position
+
+    def get_opened_short_position(self, pair: str):
+        positions = self.exchange.fetch_positions()
+
+        open_position = next(
+            (p for p in positions if p['symbol'] == pair and p['side'] == 'short'), None)
 
         if not open_position:
             raise ConnectorException('position not exists')

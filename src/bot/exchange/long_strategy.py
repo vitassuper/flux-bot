@@ -31,4 +31,4 @@ class LongStrategy(BaseStrategy):
             pair=pair, amount=quote_amount)
 
     def get_opened_position(self, pair: str):
-        return self.exchange.get_opened_position(pair=pair)
+        return self.exchange.get_opened_long_position(pair=pair)
