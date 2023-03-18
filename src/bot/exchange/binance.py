@@ -21,13 +21,34 @@ class Binance(BaseExchange):
 
         super().__init__(bot_id=bot_id, exchange=exchange)
 
-    def ensure_deal_not_opened(self, pair: str):
+    def ensure_long_position_not_opened(self, pair: str):
+        raise NotImplementedError('This function is not implemented yet.')
+
+    def ensure_long_position_opened(self, pair: str) -> None:
+        raise NotImplementedError('This function is not implemented yet.')
+
+    def add_margin_to_long_position(self, pair: str, amount: float):
+        raise NotImplementedError('This function is not implemented yet.')
+
+    def add_margin_to_short_position(self, pair: str, amount: float):
+        raise NotImplementedError('This function is not implemented yet.')
+
+    def ensure_short_position_not_opened(self, pair: str) -> None:
         positions = self.exchange.fetch_positions_risk([pair])
 
         open_position = next(
             (p for p in positions if p['contracts']), None)
 
         if open_position:
+            raise ConnectorException(f'position already exists: {pair}')
+
+    def ensure_short_position_opened(self, pair: str) -> None:
+        positions = self.exchange.fetch_positions_risk([pair])
+
+        open_position = next(
+            (p for p in positions if p['contracts']), None)
+
+        if not open_position:
             raise ConnectorException(f'position already exists: {pair}')
 
     def get_opened_position(self, pair: str):
@@ -40,14 +61,6 @@ class Binance(BaseExchange):
             raise ConnectorException('position not exists')
 
         return open_position
-
-    def fetch_opened_positions(self):
-        exchange_positions = self.exchange.fetch_positions_risk()
-        exchange_positions = [
-            position for position in exchange_positions if position['contracts']]
-        exchange_positions.sort(key=lambda item: item['info']['symbol'])
-
-        return exchange_positions
 
     def get_order_status(self, order, pair):
         return order
@@ -71,9 +84,9 @@ class Binance(BaseExchange):
             amount=amount,
         )
 
-    def get_base_amount(self, symbol: str, quote_amount: float):
-        market = self.exchange.market(symbol)
-        price = self.exchange.fetch_ticker(symbol)['last']
+    def get_base_amount(self, pair: str, quote_amount: float):
+        market = self.exchange.market(pair)
+        price = self.exchange.fetch_ticker(pair)['last']
 
         min_notional_filter = next(
             filter(lambda x: x['filterType'] == 'MIN_NOTIONAL', market['info']['filters']))
@@ -85,6 +98,15 @@ class Binance(BaseExchange):
 
         if (quote_amount < minimal_amount):
             raise ConnectorException(
-                f'low amount for pair {symbol} - min amount: {minimal_amount}')
+                f'low amount for pair {pair} - min amount: {minimal_amount}')
 
-        return self.exchange.amount_to_precision(symbol, amount=quote_amount / price)
+        return self.exchange.amount_to_precision(pair, amount=quote_amount / price)
+
+    def buy_long_position(self, pair: str, amount: int):
+        raise NotImplementedError('This function is not implemented yet.')
+
+    def sell_long_position(self, pair: str, amount: int):
+        raise NotImplementedError('This function is not implemented yet.')
+
+    def set_leverage_for_long_position(self, pair: str, leverage: int):
+        raise NotImplementedError('This function is not implemented yet.')
