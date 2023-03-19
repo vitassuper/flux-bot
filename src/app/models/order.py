@@ -1,14 +1,14 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Numeric
+from sqlalchemy import ForeignKey, String, Numeric
+from sqlalchemy.orm import Mapped, mapped_column
 
 from src.app.models.base import Base
-from src.app.models.deal import Deal
 
 
 class Order(Base):
     __tablename__ = 'orders'
 
-    id = Column(Integer, primary_key=True, index=True)
-    deal_id = Column(Integer, ForeignKey(Deal.id), nullable=False)
-    side = Column(String(10), nullable=False)
-    price = Column(Numeric(precision=20, scale=10), nullable=False)
-    volume = Column(Numeric(precision=20, scale=10), nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    deal_id: Mapped[int] = mapped_column(ForeignKey('deals.id'))
+    side: Mapped[str] = mapped_column(String(10), nullable=False)
+    price: Mapped[float] = mapped_column(Numeric(precision=20, scale=10), nullable=False)
+    volume: Mapped[float] = mapped_column(Numeric(precision=20, scale=10), nullable=False)
