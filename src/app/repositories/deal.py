@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Any, Dict, List, Union
 
-from sqlalchemy import func
+from sqlalchemy import func, select
+from src.app.models.order import Order
 
 from src.app.repositories.base import CRUDBase, ModelType
 from src.app.models.deal import Deal
@@ -62,6 +63,10 @@ class CRUDDeal(CRUDBase[Deal, DealCreate, DealUpdate]):
                     self.model.date_close >= start_date).scalar()
 
             return result or 0
+
+    def get_orders(deal_id: int) -> List:
+        with SessionLocal() as session:
+            return session.query(Deal, Order.id).join(Order, Order.deal_id == Deal.id).where(Deal.id == deal_id)
 
 
 deal = CRUDDeal(Deal)

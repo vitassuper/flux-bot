@@ -40,6 +40,8 @@ def get_daily_pnl():
 
     return repository.get_pnl_sum(midnight)
 
+def get_orders(deal_id: int):
+    return repository.get_orders(deal_id=deal_id)
 
 def update_deal(bot_id: int, pair: str, obj_in: DealUpdate) -> Deal:
     deal = get_deal(bot_id=bot_id, pair=pair)
