@@ -3,7 +3,7 @@ from typing import List
 from fastapi import HTTPException, status
 
 from src.app.models import Deal
-from src.app.repositories.deal import deal as repository
+from src.app.repositories.deal_old import deal as repository
 from src.app.schemas import DealCreate
 from src.app.schemas.deals import DealUpdate
 

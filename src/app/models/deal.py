@@ -1,4 +1,5 @@
 import datetime
+import decimal
 from typing import List
 
 from sqlalchemy import String, SmallInteger, DateTime, Numeric, Integer
@@ -16,6 +17,6 @@ class Deal(Base):
     safety_order_count: Mapped[int] = mapped_column(SmallInteger(), nullable=False, default=0)
     date_open: Mapped[datetime.datetime] = mapped_column(DateTime(), nullable=False)
     date_close: Mapped[datetime.datetime] = mapped_column(DateTime(), nullable=True, default=None)
-    pnl: Mapped[float] = mapped_column(Numeric(), nullable=True)
+    pnl: Mapped[decimal] = mapped_column(Numeric(), nullable=True)
     bot_id: Mapped[int] = mapped_column(Integer(), nullable=False)
     order: Mapped[List["Order"]] = relationship(cascade="all, delete", passive_deletes=True)

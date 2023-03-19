@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Response
-from src.bot.notifier import Notifier
+# from src.bot.notifier import Notifier
 from src.core.config import settings
 from starlette.middleware.cors import CORSMiddleware
 from src.app.routes import signal
@@ -10,12 +10,12 @@ app = FastAPI(
 )
 
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    notifier = Notifier()
-    notifier.send_warning_notification(f'{exc}')
-
-    return Response(content='Validation Error', status_code=400)
+# @app.exception_handler(RequestValidationError)
+# async def validation_exception_handler(request: Request, exc: RequestValidationError):
+#     notifier = Notifier()
+#     notifier.send_warning_notification(f'{exc}')
+#
+#     return Response(content='Validation Error', status_code=400)
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:

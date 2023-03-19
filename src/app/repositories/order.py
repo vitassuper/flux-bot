@@ -1,24 +1,27 @@
+import decimal
+
+from sqlalchemy import select
+
 from src.app.models.order import Order
-from src.app.repositories.base import CRUDBase
-from src.app.schemas.order import OrderCreate
-from src.db.session import SessionLocal
+from src.db.session import async_session
 
 
-class CRUDOrder(CRUDBase[Order, OrderCreate]):
-    def create(self, obj_in: OrderCreate) -> Order:
-        db_obj = Order(
-            deal_id=obj_in.deal_id,
-            side=obj_in.side,
-            price=obj_in.price,
-            volume=obj_in.volume,
+def create_order(deal_id: int, side: str, price: decimal, volume: decimal):
+    async with async_session() as session:
+        order = Order(
+            deal_id=deal_id,
+            side=side,
+            price=price,
+            volume=volume
         )
-
-        with SessionLocal() as session:
-            session.add(db_obj)
-            session.commit()
-            session.refresh(db_obj)
-
-        return db_obj
+        session.add(order)
+        await session.commit()
+        return order
 
 
-order = CRUDOrder(Order)
+def get_deal_orders(deal_id: int):
+    async with async_session() as session:
+        query = select(Order).where(Order.deal_id == deal_id)
+        result = await session.execute(query)
+
+        return result.scalars().all()
