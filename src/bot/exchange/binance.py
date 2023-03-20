@@ -49,7 +49,7 @@ class Binance(BaseExchange):
             (p for p in positions if p['contracts']), None)
 
         if not open_position:
-            raise ConnectorException(f'position already exists: {pair}')
+            raise ConnectorException(f'position not exists: {pair}')
 
     def get_opened_short_position(self, pair: str):
         positions = self.exchange.fetch_positions_risk([pair])
