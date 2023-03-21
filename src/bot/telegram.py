@@ -2,14 +2,17 @@ import asyncio
 from typing import Callable, Dict, List
 from telegram import ReplyKeyboardMarkup, Update, KeyboardButton
 from telegram.ext import (
-    Updater,
+    Application,
     CallbackContext,
     MessageHandler,
-    Filters,
+    filters,
 )
 from src.app.services.deal import get_daily_pnl, get_total_pnl
+from src.bot.exchange.async_base import BaseExchange
 from src.bot.exchange.async_binance import Binance
 from src.bot.exchange.async_okx import Okex
+from src.bot.objects.active_position import ActivePosition
+from src.bot.objects.opened_position import OpenedPosition
 
 from src.core.config import settings
 
@@ -58,23 +61,22 @@ class Telegram:
 
     def __init__(self, token):
         self.initialize()
-        updater = Updater(token)
+        application = Application().builder().token(token).build()
 
         for command in self.keyboard_keys:
-            updater.dispatcher.add_handler(
-                MessageHandler(Filters.regex(command['name']), command['handler']))
+            application.add_handler(
+                MessageHandler(filters.Regex(command['name']), command['handler']))
 
-        updater.start_polling()
-        updater.idle([])
+        application.run_polling(allowed_updates=Update.ALL_TYPES, stop_signals=[])
 
 
 def run():
     Telegram(settings.TELEGRAM_BOT_TOKEN)
 
 
-async def get_from_exchange(exchange):
+async def get_from_exchange(exchange: BaseExchange):
     text = f'{exchange.get_exchange_name()}:\n\n'
-    positions = await exchange.get_open_positions_info()
+    positions: List[ActivePosition] = await exchange.get_open_positions_info()
 
     if not positions:
         return text + 'No positions'
