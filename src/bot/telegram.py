@@ -67,7 +67,8 @@ class Telegram:
             application.add_handler(
                 MessageHandler(filters.Regex(command['name']), command['handler']))
 
-        application.run_polling(allowed_updates=Update.ALL_TYPES, stop_signals=[])
+        application.run_polling(
+            allowed_updates=Update.ALL_TYPES, stop_signals=[])
 
 
 def run():

@@ -10,7 +10,7 @@ from src.bot.notifier import Notifier
 
 async def run(signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal]):
     connector = Connector(bot_id=signal.bot_id)
-   
+
     await connector.dispatch(signal=signal)
 
 
