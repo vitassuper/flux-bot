@@ -1,6 +1,8 @@
 FROM python:3.11-slim-bullseye
 
 RUN apt-get update && apt-get install --no-install-recommends --assume-yes curl libpq-dev gcc python3-dev
+
+COPY ./requirements.txt .
 RUN pip3 install -r requirements.txt
 
 WORKDIR /app
