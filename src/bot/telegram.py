@@ -61,7 +61,7 @@ class Telegram:
 
     def __init__(self, token):
         self.initialize()
-        application = Application().builder().token(token).build()
+        application = Application.builder().token(token).build()
 
         for command in self.keyboard_keys:
             application.add_handler(
