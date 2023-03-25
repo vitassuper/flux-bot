@@ -72,18 +72,15 @@ class Binance(BaseExchange):
         self.exchange.set_leverage(leverage, pair)
 
     def buy_short_position(self, pair: str, amount: int):
-        return self.exchange.create_order(
+        return self.exchange.create_market_buy_order(
             symbol=pair,
-            side='buy',
-            type='market',
             amount=amount,
+            params={'reduceOnly': True}
         )
 
     def sell_short_position(self, pair: str, amount: int):
-        return self.exchange.create_order(
+        return self.exchange.create_market_sell_order(
             symbol=pair,
-            side='sell',
-            type='market',
             amount=amount,
         )
 

@@ -29,37 +29,40 @@ class Telegram:
         ]
 
     @staticmethod
-    def start_handler(update: Update, context: CallbackContext) -> None:
+    async def start_handler(update: Update, context: CallbackContext) -> None:
         keyboard = [
             [KeyboardButton('Get positions'), KeyboardButton('Get stats')]]
 
-        update.message.reply_text(
+        await update.message.reply_text(
             'Choose a command',
             reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
         )
 
     @staticmethod
-    def stats_handler(update: Update, context: CallbackContext) -> None:
+    async def stats_handler(update: Update, context: CallbackContext) -> None:
         total_pnl = get_total_pnl()
         daily_png = get_daily_pnl()
 
-        update.message.reply_text(
+        await update.message.reply_text(
             f'Daily PNL: {daily_png}\n'
             f'Total PNL: {total_pnl}'
         )
 
     @staticmethod
-    def positions_handler(update: Update, context: CallbackContext) -> None:
-        exchanges = asyncio.run(get_all_positions())
+    async def positions_handler(update: Update, context: CallbackContext) -> None:
+        exchanges = await get_all_positions()
 
         text = ''
 
         for positions in exchanges:
             text += f'{positions}\n'
 
-        update.message.reply_text(text)
+        await update.message.reply_text(text)
 
     def __init__(self, token):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
         self.initialize()
         application = Application.builder().token(token).build()
 
