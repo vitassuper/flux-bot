@@ -82,6 +82,6 @@ class GridStrategy():
                 order['symbol'], quote_amount),
             safety_orders_count=deal.safety_order_count,
             duration=duration,
-            profit='0',
-            profit_percentage='0'
+            profit='Non available',
+            profit_percentage='Non available'
         )
