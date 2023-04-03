@@ -40,7 +40,7 @@ class Connector:
                         pair=pair, amount=signal.amount)
 
                 case 'close':
-                    await self.dispatch_close_short_position(pair=pair)
+                    await self.dispatch_close_short_position(pair=pair, amount=signal.amount)
                 case _:
                     raise ConnectorException('unknown type of signal')
 
@@ -64,8 +64,8 @@ class Connector:
         await self.notifier.send_notification(
             f'Averaged position, pair: {averaged_position.pair}, size: {averaged_position.quote_amount}$ safety orders: {averaged_position.safety_orders_count}')
 
-    async def dispatch_close_short_position(self, pair: str):
-        closed_position = self.strategy.close_deal(pair=pair)
+    async def dispatch_close_short_position(self, pair: str, amount: float):
+        closed_position = self.strategy.close_deal(pair=pair, amount=amount)
 
         await self.notifier.send_notification((
             f'{pair}\n'

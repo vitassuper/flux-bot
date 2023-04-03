@@ -1,5 +1,6 @@
 import abc
 import re
+from typing import Literal, Union
 
 
 class BaseExchange(metaclass=abc.ABCMeta):
@@ -31,19 +32,19 @@ class BaseExchange(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def buy_short_position(self, pair: str, amount: int):
+    def buy_short_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         pass
 
     @abc.abstractmethod
-    def sell_short_position(self, pair: str, amount: int):
+    def sell_short_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']]):
         pass
 
     @abc.abstractmethod
-    def buy_long_position(self, pair: str, amount: int):
+    def buy_long_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         pass
 
     @abc.abstractmethod
-    def sell_long_position(self, pair: str, amount: int):
+    def sell_long_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         pass
 
     @abc.abstractmethod

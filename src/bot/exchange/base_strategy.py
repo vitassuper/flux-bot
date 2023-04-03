@@ -122,7 +122,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
             safety_orders_count=safety_count
         )
 
-    def close_deal(self, pair: str):
+    def close_deal(self, pair: str, amount: float):
         open_position = self.get_opened_position(pair)
 
         order = self.close_market_order(pair, open_position['contracts'])

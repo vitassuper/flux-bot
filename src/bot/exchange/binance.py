@@ -1,3 +1,4 @@
+from typing import Literal, Union
 import ccxt
 from src.bot.exception import ConnectorException
 from src.bot.exchange.base import BaseExchange
@@ -71,14 +72,14 @@ class Binance(BaseExchange):
     def set_leverage_for_short_position(self, pair: str, leverage: int):
         self.exchange.set_leverage(leverage, pair)
 
-    def buy_short_position(self, pair: str, amount: int):
+    def buy_short_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         return self.exchange.create_market_buy_order(
             symbol=pair,
             amount=amount,
             params={'reduceOnly': True}
         )
 
-    def sell_short_position(self, pair: str, amount: int):
+    def sell_short_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         return self.exchange.create_market_sell_order(
             symbol=pair,
             amount=amount,
@@ -102,10 +103,10 @@ class Binance(BaseExchange):
 
         return self.exchange.amount_to_precision(pair, amount=quote_amount / price)
 
-    def buy_long_position(self, pair: str, amount: int):
+    def buy_long_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         raise NotImplementedError('This function is not implemented yet.')
 
-    def sell_long_position(self, pair: str, amount: int):
+    def sell_long_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         raise NotImplementedError('This function is not implemented yet.')
 
     def set_leverage_for_long_position(self, pair: str, leverage: int):

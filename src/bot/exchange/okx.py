@@ -11,7 +11,7 @@ class Okex(BaseExchange):
         return 'OKEX'
 
     def __init__(self, bot_id: int) -> None:
-        exchange = ccxt.okex({
+        exchange: ccxt.okex = ccxt.okex({
             'apiKey': settings.API_KEY,
             'secret': settings.API_SECRET,
             'password': settings.API_PASSWORD,
@@ -113,26 +113,26 @@ class Okex(BaseExchange):
         self.set_leverage(leverage=leverage,
                           pair=pair, side='long')
 
-    def sell_short_position(self, pair: str, amount: int):
+    def sell_short_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         return self.exchange.create_market_sell_order(symbol=pair, amount=amount, params={
             'posSide': 'short',
-            'tdMode': 'isolated',
+            'tdMode': margin_type,
         })
 
-    def buy_short_position(self, pair: str, amount: int):
+    def buy_short_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         return self.exchange.create_market_buy_order(symbol=pair, amount=amount, params={
             'posSide': 'short',
-            'tdMode': 'isolated',
+            'tdMode': margin_type,
         })
 
-    def buy_long_position(self, pair: str, amount: int):
+    def buy_long_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         return self.exchange.create_market_buy_order(symbol=pair, amount=amount, params={
             'posSide': 'long',
-            'tdMode': 'isolated',
+            'tdMode': margin_type,
         })
 
-    def sell_long_position(self, pair: str, amount: int):
+    def sell_long_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
         return self.exchange.create_market_sell_order(symbol=pair, amount=amount, params={
             'posSide': 'long',
-            'tdMode': 'isolated',
+            'tdMode': margin_type,
         })
