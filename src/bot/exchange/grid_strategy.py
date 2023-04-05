@@ -31,7 +31,7 @@ class GridStrategy():
         return OpenedPosition(pair=pair, quote_amount=self.strategy.exchange.exchange.cost_to_precision(order['symbol'], quote_amount))
 
     def average_deal(self, pair: str, amount: float):
-        self.ensure_deal_opened(pair)
+        self.strategy.ensure_deal_opened(pair)
 
         base_amount = self.strategy.get_base_amount(
             pair=pair, quote_amount=amount)
