@@ -1,10 +1,11 @@
 import ccxt.async_support as ccxt
-from src.bot.exchange.async_base import BaseExchange
+
+from src.bot.exchange.async_exchange.async_base import BaseExchange
 from src.core.config import settings
 
 
 class Binance(BaseExchange):
-    def __init__(self, bot_id: int) -> None:
+    def __init__(self) -> None:
         exchange = ccxt.binance({
             'apiKey': settings.API_KEY_BINANCE,
             'secret': settings.API_SECRET_BINANCE,
@@ -14,9 +15,10 @@ class Binance(BaseExchange):
             'enableRateLimit': True
         })
 
-        super().__init__(bot_id=bot_id, exchange=exchange)
+        super().__init__(exchange=exchange)
 
-    def get_exchange_name(self):
+    @staticmethod
+    def get_exchange_name():
         return 'Binance'
 
     async def fetch_opened_positions(self):

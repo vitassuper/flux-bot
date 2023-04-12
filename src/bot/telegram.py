@@ -1,5 +1,6 @@
 import asyncio
-from typing import Callable, Dict, List
+from typing import Dict, List, Tuple, Union
+
 from telegram import ReplyKeyboardMarkup, Update, KeyboardButton
 from telegram.ext import (
     Application,
@@ -7,18 +8,17 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from src.app.services.deal import get_daily_pnl, get_total_pnl
-from src.bot.exchange.async_base import BaseExchange
-from src.bot.exchange.async_binance import Binance
-from src.bot.exchange.async_okx import Okex
-from src.bot.objects.active_position import ActivePosition
-from src.bot.objects.opened_position import OpenedPosition
 
+from src.app.services.deal import get_daily_pnl, get_total_pnl
+from src.bot.exchange.async_exchange.async_base import BaseExchange
+from src.bot.exchange.async_exchange.async_binance import Binance
+from src.bot.exchange.async_exchange.async_okx import Okex
+from src.bot.objects.active_deal import ActiveDeal
 from src.core.config import settings
 
 
 class Telegram:
-    keyboard_keys: List[Dict[str, Callable[[], None]]] = []
+    keyboard_keys: List[Dict[str, Union[str, Tuple[Update, CallbackContext]]]] = []
 
     @classmethod
     def initialize(cls):
@@ -79,8 +79,8 @@ def run():
 
 
 async def get_from_exchange(exchange: BaseExchange):
-    text = f'{exchange.get_exchange_name()}:\n\n'
-    positions: List[ActivePosition] = await exchange.get_open_positions_info()
+    text = f'{BaseExchange.get_exchange_name()}:\n\n'
+    positions: List[ActiveDeal] = await exchange.get_open_positions_info()
 
     if not positions:
         return text + 'No positions'
@@ -103,7 +103,7 @@ async def get_from_exchange(exchange: BaseExchange):
 
 
 async def get_all_positions():
-    exchanges = [Binance(2), Okex(1)]
+    exchanges = [Binance(), Okex()]
     tasks = []
 
     for exchange in exchanges:

@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request, Response
-from src.bot.notifier import Notifier
-from src.core.config import settings
-from starlette.middleware.cors import CORSMiddleware
-from src.app.routes import signal
 from fastapi.exceptions import RequestValidationError
+from starlette.middleware.cors import CORSMiddleware
+
+from src.app.routes import signal
+from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
+from src.core.config import settings
 
 app = FastAPI(
     title=settings.PROJECT_NAME, openapi_url=f'{settings.API_V1_STR}/openapi.json'
@@ -12,10 +13,13 @@ app = FastAPI(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    notifier = Notifier()
-    notifier.send_warning_notification(f'{exc}')
+    notifier = TelegramNotifier()
+
+    notifier.add_message_to_stack(f'🚨{exc}')
+    await notifier.send_message()
 
     return Response(content='Validation Error', status_code=400)
+
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:

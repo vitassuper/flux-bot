@@ -1,14 +1,16 @@
 import abc
 import re
-from typing import Literal, Union
+from typing import Union
+
+from src.bot.types.margin_type import MarginType
 
 
 class BaseExchange(metaclass=abc.ABCMeta):
     def __init__(self, bot_id: int, exchange) -> None:
         self.bot_id = bot_id
-        self.exchange = exchange
+        self.ccxt_exchange = exchange
 
-        self.exchange.load_markets()
+        self.ccxt_exchange.load_markets()
 
     # Abstract methods
     @abc.abstractmethod
@@ -32,27 +34,34 @@ class BaseExchange(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def buy_short_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
+    def buy_short_position(self, pair: str, amount: float,
+                           margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
         pass
 
     @abc.abstractmethod
-    def sell_short_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']]):
+    def sell_short_position(self, pair: str, amount: float,
+                            margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
         pass
 
     @abc.abstractmethod
-    def buy_long_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
+    def buy_long_position(self, pair: str, amount: float,
+                          margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
         pass
 
     @abc.abstractmethod
-    def sell_long_position(self, pair: str, amount: int, margin_type: Union[Literal['cross'], Literal['isolated']] = 'isolated'):
+    def sell_long_position(self, pair: str, amount: float,
+                           margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
         pass
 
     @abc.abstractmethod
-    def set_leverage_for_short_position(self, pair: str, leverage: int):
+    def set_leverage_for_short_position(self, pair: str, leverage: int,
+                                        margin_type: Union[
+                                            MarginType.cross, MarginType.isolated] = MarginType.isolated):
         pass
 
     @abc.abstractmethod
-    def set_leverage_for_long_position(self, pair: str, leverage: int):
+    def set_leverage_for_long_position(self, pair: str, leverage: int,
+                                       margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
         pass
 
     @abc.abstractmethod
@@ -64,7 +73,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def get_base_amount(self, symbol: str, quote_amount: float):
+    def get_base_amount(self, pair: str, quote_amount: float):
         pass
 
     @abc.abstractmethod
@@ -81,9 +90,14 @@ class BaseExchange(metaclass=abc.ABCMeta):
 
     # End Abstract methods
 
+    # Unified methods
+
+    def get_market(self, pair: str):
+        return self.ccxt_exchange.market(pair)
+
     # TODO: temp solution
     def guess_symbol_from_tv(self, symbol: str):
         base = symbol.split('USDT')[0]
         base = re.sub(r'[^a-zA-Z\d]+', '', base)
 
-        return self.exchange.market(f'{base}/USDT:USDT')['symbol']
+        return self.ccxt_exchange.market(f'{base}/USDT:USDT')['symbol']

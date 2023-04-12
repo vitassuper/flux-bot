@@ -36,7 +36,8 @@ class CRUDDeal(CRUDBase[Deal, DealCreate, DealUpdate]):
 
     def get_bot_last_deal(self, bot_id: int, pair: str) -> Deal:
         with SessionLocal() as session:
-            return session.query(self.model).filter(self.model.bot_id == bot_id, self.model.pair == pair).order_by(self.model.id.desc()).first()
+            return session.query(self.model).filter(self.model.bot_id == bot_id, self.model.pair == pair).order_by(
+                self.model.id.desc()).first()
 
     def get_open_deals(self) -> List[ModelType]:
         with SessionLocal() as session:
