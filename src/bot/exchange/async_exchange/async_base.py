@@ -1,11 +1,14 @@
-from src.app.services.deal import get_opened_deals
-from src.bot.objects.active_position import ActivePosition
+import abc
+from typing import List
+
 from ccxt.base.decimal_to_precision import TRUNCATE
 
+from src.app.services.deal import get_opened_deals
+from src.bot.objects.active_deal import ActiveDeal
 
-class BaseExchange:
-    def __init__(self, bot_id: int, exchange) -> None:
-        self.bot_id = bot_id
+
+class BaseExchange(metaclass=abc.ABCMeta):
+    def __init__(self, exchange) -> None:
         self.exchange = exchange
 
     async def __aenter__(self):
@@ -14,7 +17,15 @@ class BaseExchange:
     async def __aexit__(self, exc_type, exc, tb):
         await self.exchange.close()
 
-    async def get_open_positions_info(self):
+    @abc.abstractmethod
+    async def fetch_opened_positions(self):
+        pass
+
+    @staticmethod
+    def get_exchange_name():
+        pass
+
+    async def get_open_positions_info(self) -> List[ActiveDeal]:
         deals = get_opened_deals()
 
         exchange_positions = await self.fetch_opened_positions()
@@ -29,13 +40,13 @@ class BaseExchange:
                 symbol = item['symbol']
 
                 deal = next((x for x in deals if x.pair ==
-                            symbol), None)
+                             symbol), None)
 
                 liquidation_price = self.exchange.price_to_precision(
                     symbol, item['liquidationPrice']) if item['liquidationPrice'] else None
 
                 positions.append(
-                    ActivePosition(
+                    ActiveDeal(
                         pair=item['symbol'],
                         margin=self.exchange.decimal_to_precision(
                             item['initialMargin'], TRUNCATE, 4),

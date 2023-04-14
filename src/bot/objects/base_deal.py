@@ -1,8 +1,9 @@
-class BasePosition:
+class BaseDeal:
     def __init__(
         self,
         pair: str,
         quote_amount: str,
+        price: str,
         base_amount: str = '',
         bot_name: str = 'Test bot',
     ):
@@ -10,3 +11,4 @@ class BasePosition:
         self.pair = pair
         self.quote_amount = quote_amount
         self.base_amount = base_amount
+        self.price = price

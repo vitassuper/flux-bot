@@ -1,6 +1,10 @@
+from typing import Union
+
 import ccxt
+
 from src.bot.exception import ConnectorException
 from src.bot.exchange.base import BaseExchange
+from src.bot.types.margin_type import MarginType
 from src.core.config import settings
 
 
@@ -34,7 +38,7 @@ class Binance(BaseExchange):
         raise NotImplementedError('This function is not implemented yet.')
 
     def ensure_short_position_not_opened(self, pair: str) -> None:
-        positions = self.exchange.fetch_positions_risk([pair])
+        positions = self.ccxt_exchange.fetch_positions_risk([pair])
 
         open_position = next(
             (p for p in positions if p['contracts']), None)
@@ -43,16 +47,16 @@ class Binance(BaseExchange):
             raise ConnectorException(f'position already exists: {pair}')
 
     def ensure_short_position_opened(self, pair: str) -> None:
-        positions = self.exchange.fetch_positions_risk([pair])
+        positions = self.ccxt_exchange.fetch_positions_risk([pair])
 
         open_position = next(
             (p for p in positions if p['contracts']), None)
 
         if not open_position:
-            raise ConnectorException(f'position already exists: {pair}')
+            raise ConnectorException(f'position not exists: {pair}')
 
     def get_opened_short_position(self, pair: str):
-        positions = self.exchange.fetch_positions_risk([pair])
+        positions = self.ccxt_exchange.fetch_positions_risk([pair])
 
         open_position = next(
             (p for p in positions if p['contracts']), None)
@@ -68,28 +72,28 @@ class Binance(BaseExchange):
     def get_order_status(self, order, pair):
         return order
 
-    def set_leverage_for_short_position(self, pair: str, leverage: int):
-        self.exchange.set_leverage(leverage, pair)
+    def set_leverage_for_short_position(self, pair: str, leverage: int, margin_type: Union[
+        MarginType.cross, MarginType.isolated] = MarginType.isolated):
+        self.ccxt_exchange.set_leverage(leverage, pair)
 
-    def buy_short_position(self, pair: str, amount: int):
-        return self.exchange.create_order(
+    def buy_short_position(self, pair: str, amount: float,
+                           margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
+        return self.ccxt_exchange.create_market_buy_order(
             symbol=pair,
-            side='buy',
-            type='market',
             amount=amount,
+            params={'reduceOnly': True}
         )
 
-    def sell_short_position(self, pair: str, amount: int):
-        return self.exchange.create_order(
+    def sell_short_position(self, pair: str, amount: float,
+                            margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
+        return self.ccxt_exchange.create_market_sell_order(
             symbol=pair,
-            side='sell',
-            type='market',
             amount=amount,
         )
 
     def get_base_amount(self, pair: str, quote_amount: float):
-        market = self.exchange.market(pair)
-        price = self.exchange.fetch_ticker(pair)['last']
+        market = self.ccxt_exchange.market(pair)
+        price = self.ccxt_exchange.fetch_ticker(pair)['last']
 
         min_notional_filter = next(
             filter(lambda x: x['filterType'] == 'MIN_NOTIONAL', market['info']['filters']))
@@ -99,17 +103,20 @@ class Binance(BaseExchange):
 
         minimal_amount = max(minimal_quote_amount, min_notional)
 
-        if (quote_amount < minimal_amount):
+        if quote_amount < minimal_amount:
             raise ConnectorException(
                 f'low amount for pair {pair} - min amount: {minimal_amount}')
 
-        return self.exchange.amount_to_precision(pair, amount=quote_amount / price)
+        return self.ccxt_exchange.amount_to_precision(pair, amount=quote_amount / price)
 
-    def buy_long_position(self, pair: str, amount: int):
+    def buy_long_position(self, pair: str, amount: float,
+                          margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
         raise NotImplementedError('This function is not implemented yet.')
 
-    def sell_long_position(self, pair: str, amount: int):
+    def sell_long_position(self, pair: str, amount: float,
+                           margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
         raise NotImplementedError('This function is not implemented yet.')
 
-    def set_leverage_for_long_position(self, pair: str, leverage: int):
+    def set_leverage_for_long_position(self, pair: str, leverage: int,
+                                       margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
         raise NotImplementedError('This function is not implemented yet.')

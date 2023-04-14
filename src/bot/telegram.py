@@ -1,21 +1,24 @@
 import asyncio
-from typing import Callable, Dict, List
+from typing import Dict, List, Tuple, Union
+
 from telegram import ReplyKeyboardMarkup, Update, KeyboardButton
 from telegram.ext import (
-    Updater,
+    Application,
     CallbackContext,
     MessageHandler,
-    Filters,
+    filters,
 )
-from src.app.services.deal import get_daily_pnl, get_total_pnl
-from src.bot.exchange.async_binance import Binance
-from src.bot.exchange.async_okx import Okex
 
+from src.app.services.deal import get_daily_pnl, get_total_pnl
+from src.bot.exchange.async_exchange.async_base import BaseExchange
+from src.bot.exchange.async_exchange.async_binance import Binance
+from src.bot.exchange.async_exchange.async_okx import Okex
+from src.bot.objects.active_deal import ActiveDeal
 from src.core.config import settings
 
 
 class Telegram:
-    keyboard_keys: List[Dict[str, Callable[[], None]]] = []
+    keyboard_keys: List[Dict[str, Union[str, Tuple[Update, CallbackContext]]]] = []
 
     @classmethod
     def initialize(cls):
@@ -26,55 +29,58 @@ class Telegram:
         ]
 
     @staticmethod
-    def start_handler(update: Update, context: CallbackContext) -> None:
+    async def start_handler(update: Update, context: CallbackContext) -> None:
         keyboard = [
             [KeyboardButton('Get positions'), KeyboardButton('Get stats')]]
 
-        update.message.reply_text(
+        await update.message.reply_text(
             'Choose a command',
             reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
         )
 
     @staticmethod
-    def stats_handler(update: Update, context: CallbackContext) -> None:
+    async def stats_handler(update: Update, context: CallbackContext) -> None:
         total_pnl = get_total_pnl()
         daily_png = get_daily_pnl()
 
-        update.message.reply_text(
+        await update.message.reply_text(
             f'Daily PNL: {daily_png}\n'
             f'Total PNL: {total_pnl}'
         )
 
     @staticmethod
-    def positions_handler(update: Update, context: CallbackContext) -> None:
-        exchanges = asyncio.run(get_all_positions())
+    async def positions_handler(update: Update, context: CallbackContext) -> None:
+        exchanges = await get_all_positions()
 
         text = ''
 
         for positions in exchanges:
             text += f'{positions}\n'
 
-        update.message.reply_text(text)
+        await update.message.reply_text(text)
 
     def __init__(self, token):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
         self.initialize()
-        updater = Updater(token)
+        application = Application.builder().token(token).build()
 
         for command in self.keyboard_keys:
-            updater.dispatcher.add_handler(
-                MessageHandler(Filters.regex(command['name']), command['handler']))
+            application.add_handler(
+                MessageHandler(filters.Regex(command['name']), command['handler']))
 
-        updater.start_polling()
-        updater.idle([])
+        application.run_polling(
+            allowed_updates=Update.ALL_TYPES, stop_signals=[])
 
 
 def run():
     Telegram(settings.TELEGRAM_BOT_TOKEN)
 
 
-async def get_from_exchange(exchange):
-    text = f'{exchange.get_exchange_name()}:\n\n'
-    positions = await exchange.get_open_positions_info()
+async def get_from_exchange(exchange: BaseExchange):
+    text = f'{BaseExchange.get_exchange_name()}:\n\n'
+    positions: List[ActiveDeal] = await exchange.get_open_positions_info()
 
     if not positions:
         return text + 'No positions'
@@ -97,7 +103,7 @@ async def get_from_exchange(exchange):
 
 
 async def get_all_positions():
-    exchanges = [Binance(2), Okex(1)]
+    exchanges = [Binance(), Okex()]
     tasks = []
 
     for exchange in exchanges:

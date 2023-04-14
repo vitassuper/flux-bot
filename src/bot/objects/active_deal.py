@@ -1,11 +1,13 @@
 from datetime import datetime
-from typing import Literal, Union
+from typing import Union
+
 from src.app.models.deal import Deal
-from src.bot.helper import get_time_duration_string
-from src.bot.objects.base_position import BasePosition
+from src.bot.exchange.strategy_helper import StrategyHelper
+from src.bot.objects.base_deal import BaseDeal
+from src.bot.types.side_type import SideType
 
 
-class ActivePosition(BasePosition):
+class ActiveDeal(BaseDeal):
     def __init__(
         self,
         pair: str,
@@ -16,10 +18,9 @@ class ActivePosition(BasePosition):
         unrealized_pnl: str,
         notional_size: str,
         deal: Deal,
-        side: Union[Literal['long'], Literal['short']]
+        side: Union[SideType.short, SideType.long]
     ):
         self.margin = margin
-        self.avg_price = avg_price
         self.current_price = current_price
         self.liquidation_price = liquidation_price
         self.unrealized_pnl = unrealized_pnl
@@ -30,11 +31,11 @@ class ActivePosition(BasePosition):
         safety_orders_count = 'unknown'
 
         if deal:
-            duration = get_time_duration_string(deal.date_open, datetime.now())
+            duration = StrategyHelper.get_time_duration_string(deal.date_open, datetime.now())
             safety_orders_count = deal.safety_order_count
 
         self.duration = duration
         self.safety_orders_count = safety_orders_count
 
         # TODO: notional size not the same like quote amount
-        super().__init__(pair=pair, quote_amount=notional_size)
+        super().__init__(pair=pair, quote_amount=notional_size, price=avg_price)
