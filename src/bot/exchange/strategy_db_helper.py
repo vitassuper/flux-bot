@@ -1,9 +1,11 @@
 from datetime import datetime
 from typing import Literal
+from decimal import Decimal
 
 from src.app.models import Order, Deal
 from src.app.services.deal import update_deal, get_deal, create_deal, increment_safety_orders_count
-from src.app.services.order import create_order, get_orders_volume
+from src.app.services.order import create_order, get_orders_volume, get_deal_stats
+from src.bot.objects.deal_stats import DealStats
 from src.bot.types.order_side_type import OrderSideType
 from src.bot.types.side_type import SideType
 
@@ -30,7 +32,7 @@ class StrategyDBHelper:
     async def create_average_order(self, deal_id: int, price: float, volume: float) -> Order:
         return await create_order(deal_id=deal_id, side=self.get_order_side(action='open'), price=price, volume=volume)
 
-    async def create_close_order(self, deal_id: int, price: float, volume: float) -> Order:
+    async def create_close_order(self, deal_id: int, price: Decimal, volume: Decimal) -> Order:
         return await create_order(deal_id=deal_id, side=self.get_order_side(action='close'), price=price, volume=volume)
 
     async def close_deal(self, deal_id: int, pnl: float) -> Deal:
@@ -41,6 +43,9 @@ class StrategyDBHelper:
 
     async def open_deal(self) -> Deal:
         return await create_deal(bot_id=self.bot_id, pair=self.pair, date_open=datetime.now())
+
+    async def get_deal_stats(self, deal_id: int) -> DealStats:
+        return await get_deal_stats(deal_id=deal_id)
 
     async def get_deal_base_amount(self, deal_id: int) -> float:
         return await get_orders_volume(deal_id=deal_id)

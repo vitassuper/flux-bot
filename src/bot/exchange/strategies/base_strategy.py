@@ -1,5 +1,6 @@
 import abc
 from datetime import datetime
+from decimal import Decimal
 
 from ccxt import TRUNCATE
 
@@ -9,6 +10,7 @@ from src.bot.exchange.strategy_helper import StrategyHelper
 from src.bot.objects.averaged_deal import AveragedDeal
 from src.bot.objects.closed_deal import ClosedDeal
 from src.bot.objects.opened_deal import OpenedDeal
+from src.bot.objects.order import Order
 
 
 class BaseStrategy(metaclass=abc.ABCMeta):
@@ -18,8 +20,10 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         self.exchange = side.exchange
         self.pair = pair
 
-        self.strategy_helper = StrategyHelper(taker_fee=self.exchange.ccxt_exchange.market(self.pair)['taker'],
-                                              side=side.get_side_type())
+        contact_size = Decimal(self.exchange.get_market(pair=pair)['contractSize'])
+
+        self.strategy_helper = StrategyHelper(taker_fee=Decimal(self.exchange.ccxt_exchange.market(self.pair)['taker']),
+                                              side=side.get_side_type(), contract_size=contact_size)
 
         self.db_helper = StrategyDBHelper(side=side.get_side_type(), bot_id=self.bot_id, pair=self.pair)
 
@@ -85,8 +89,10 @@ class BaseStrategy(metaclass=abc.ABCMeta):
     def average_market_order(self, amount: float):
         return self.side.open_market_order(pair=self.pair, amount=amount)
 
-    def close_market_order(self, amount: float):
-        return self.side.close_market_order(pair=self.pair, amount=amount)
+    def close_market_order(self, amount: float) -> Order:
+        order = self.side.close_market_order(pair=self.pair, amount=amount)
+
+        return Order(price=Decimal(order['average']), volume=Decimal(order['amount']))
 
     def set_leverage(self, leverage: int):
         self.side.set_leverage(pair=self.pair, leverage=leverage)

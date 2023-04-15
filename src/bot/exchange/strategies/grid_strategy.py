@@ -40,23 +40,23 @@ class GridStrategy(BaseStrategy):
         return safety_count, quote_amount
 
     async def close_deal_process(self, amount: float = None):
-        open_position = self.get_opened_position()
+        self.ensure_deal_opened()
 
         deal = await self.db_helper.get_deal()
 
-        base_amount = await self.db_helper.get_deal_base_amount(deal_id=deal.id)
+        deal_stats = await self.db_helper.get_deal_stats(deal_id=deal.id)
 
-        order = self.close_market_order(base_amount)
+        order = self.close_market_order(deal_stats.total_volume)
 
-        price = order['average']
-        volume = order['amount']
+        await self.db_helper.create_close_order(deal_id=deal.id, price=order.price,
+                                                volume=order.volume)
 
-        db_order = await self.db_helper.create_close_order(deal_id=deal.id, price=price, volume=volume)
+        pnl = self.strategy_helper.calculate_realized_pnl(deal_stats.total_volume,
+                                                          deal_stats.average_price,
+                                                          order.volume,
+                                                          order.price)
 
-        pnl = self.strategy_helper.calculate_realized_pnl(open_position['contracts'], open_position['entryPrice'],
-                                                          order['amount'], order['average'])
-
-        pnl_percentage = self.strategy_helper.calculate_pnl_percentage(open_position['entryPrice'], order['average'])
+        pnl_percentage = self.strategy_helper.calculate_pnl_percentage(deal_stats.average_price, order.price)
 
         deal = await self.db_helper.close_deal(deal_id=deal.id, pnl=pnl)
 
