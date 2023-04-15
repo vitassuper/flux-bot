@@ -1,7 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Union
+from typing import Union, List
 
+from src.app.models import Order
 from src.bot.types.side_type import SideType
 
 
@@ -16,6 +17,16 @@ class StrategyHelper:
 
         return 1
 
+    def calculate_average_price(self, orders: List[Order]):
+        total_volume = 0
+        total_value = 0
+
+        for order in orders:
+            total_volume += order.volume
+            total_value += order.price * order.volume
+
+        return total_value / total_volume
+
     def calculate_realized_pnl(self, volume: float, avg_price: float, close_volume: float,
                                close_avg_price: float) -> float:
         entry_sum = volume * avg_price
@@ -26,7 +37,7 @@ class StrategyHelper:
         exit_fee = exit_sum * self.taker_fee
         entry_fee = entry_sum * self.taker_fee
 
-        return (u_pnl * self.get_sign()) - entry_fee - exit_fee
+        return (u_pnl - entry_fee - exit_fee) * self.get_sign()
 
     def calculate_pnl_percentage(self, avg_price: float, close_price: float):
         return Decimal(

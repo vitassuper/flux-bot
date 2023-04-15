@@ -1,6 +1,7 @@
-from src.bot.exception import ConnectorException
+from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.side.base_side import BaseSide
 from src.bot.types.margin_type import MarginType
+from src.bot.types.side_type import SideType
 
 
 class LongSide(BaseSide):
@@ -36,3 +37,6 @@ class LongSide(BaseSide):
 
     def get_opened_position(self, pair: str):
         return self.exchange.get_opened_long_position(pair=pair)
+
+    def get_side_type(self):
+        return SideType.long

@@ -10,7 +10,7 @@ class Order(Base):
     __tablename__ = 'orders'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    deal_id: Mapped[int] = mapped_column(ForeignKey('deals.id'))
+    deal_id: Mapped[int] = mapped_column(ForeignKey('deals.id', ondelete='CASCADE'))
     side: Mapped[str] = mapped_column(String(10), nullable=False)
     price: Mapped[decimal] = mapped_column(Numeric(precision=20, scale=10), nullable=False)
     volume: Mapped[decimal] = mapped_column(Numeric(precision=20, scale=10), nullable=False)

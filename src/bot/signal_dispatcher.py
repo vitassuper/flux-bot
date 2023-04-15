@@ -4,7 +4,7 @@ from typing import Union
 import ccxt
 
 from src.app import schemas
-from src.bot.exception import ConnectorException
+from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.bot import Bot
 from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
 
@@ -50,19 +50,19 @@ class SignalDispatcher:
             await self.notifier.send_message()
 
     async def handle_open_signal(self, amount: float):
-        opened_position = self.strategy.open_deal(amount=amount)
+        opened_position = await self.strategy.open_deal(amount=amount)
 
         self.notifier.add_message_to_stack(
             f'Opened position: {opened_position.pair}, size: {opened_position.quote_amount}$')
 
     async def handle_average_signal(self, amount: float):
-        averaged_position = self.strategy.average_deal(amount=amount)
+        averaged_position = await self.strategy.average_deal(amount=amount)
 
         self.notifier.add_message_to_stack(
             f'Averaged position, pair: {averaged_position.pair}, size: {averaged_position.quote_amount}$ safety orders: {averaged_position.safety_orders_count}')
 
     async def handle_close_signal(self, amount: float):
-        closed_position = self.strategy.close_deal(amount=amount)
+        closed_position = await self.strategy.close_deal(amount=amount)
 
         self.notifier.add_message_to_stack((
             f'{closed_position.pair}\n'

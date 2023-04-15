@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import decimal
 from typing import List
 
@@ -15,8 +15,8 @@ class Deal(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     pair: Mapped[str] = mapped_column(String(255), nullable=False)
     safety_order_count: Mapped[int] = mapped_column(SmallInteger(), nullable=False, default=0)
-    date_open: Mapped[datetime.datetime] = mapped_column(DateTime(), nullable=False)
-    date_close: Mapped[datetime.datetime] = mapped_column(DateTime(), nullable=True, default=None)
+    date_open: Mapped[datetime] = mapped_column(DateTime(), nullable=False)
+    date_close: Mapped[datetime] = mapped_column(DateTime(), nullable=True, default=None)
     pnl: Mapped[decimal] = mapped_column(Numeric(), nullable=True)
     bot_id: Mapped[int] = mapped_column(Integer(), nullable=False)
     order: Mapped[List["Order"]] = relationship(cascade="all, delete", passive_deletes=True)

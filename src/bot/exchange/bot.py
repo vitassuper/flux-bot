@@ -1,4 +1,4 @@
-from src.bot.exception import ConnectorException
+from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.binance import Binance
 from src.bot.exchange.okx import Okex
 from src.bot.exchange.side.base_side import BaseSide

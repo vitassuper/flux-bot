@@ -2,7 +2,8 @@ from typing import Union
 
 import ccxt
 
-from src.bot.exception import ConnectorException
+from src.bot.exceptions.connector_exception import ConnectorException
+
 from src.bot.exchange.base import BaseExchange
 from src.bot.types.margin_type import MarginType
 from src.bot.types.side_type import SideType
