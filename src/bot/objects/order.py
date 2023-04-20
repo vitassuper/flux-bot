@@ -6,3 +6,4 @@ from decimal import Decimal
 class Order:
     price: Decimal
     volume: Decimal
+    quote_amount: Decimal

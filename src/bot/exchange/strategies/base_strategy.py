@@ -56,7 +56,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
 
         return AveragedDeal(
             pair=self.pair,
-            quote_amount=quote_amount,
+            quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
             safety_orders_count=safety_count,
             price='0'
         )
@@ -83,16 +83,32 @@ class BaseStrategy(metaclass=abc.ABCMeta):
     def get_opened_position(self):
         return self.side.get_opened_position(pair=self.pair)
 
-    def open_market_order(self, amount: float):
-        return self.side.open_market_order(pair=self.pair, amount=amount)
+    def open_market_order(self, amount: float) -> Order:
+        order = self.side.open_market_order(pair=self.pair, amount=amount)
 
-    def average_market_order(self, amount: float):
-        return self.side.open_market_order(pair=self.pair, amount=amount)
+        return Order(
+            price=Decimal(order['average']),
+            volume=Decimal(order['amount']),
+            quote_amount=Decimal(self.get_quote_amount(order))
+        )
+
+    def average_market_order(self, amount: float) -> Order:
+        order = self.side.open_market_order(pair=self.pair, amount=amount)
+
+        return Order(
+            price=Decimal(order['average']),
+            volume=Decimal(order['amount']),
+            quote_amount=Decimal(self.get_quote_amount(order))
+        )
 
     def close_market_order(self, amount: float) -> Order:
         order = self.side.close_market_order(pair=self.pair, amount=amount)
 
-        return Order(price=Decimal(order['average']), volume=Decimal(order['amount']))
+        return Order(
+            price=Decimal(order['average']),
+            volume=Decimal(order['amount']),
+            quote_amount=Decimal(self.get_quote_amount(order))
+        )
 
     def set_leverage(self, leverage: int):
         self.side.set_leverage(pair=self.pair, leverage=leverage)

@@ -1,13 +1,14 @@
-from __future__ import with_statement
-
 import os
+import sys
+from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from logging.config import fileConfig
 
+sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
+
+from src.app.models.base import Base
 from src.core.config import settings
-from src.db import Base
 
 config = context.config
 
@@ -19,6 +20,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 
 target_metadata = Base.metadata
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

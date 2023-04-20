@@ -9,35 +9,29 @@ class GridStrategy(BaseStrategy):
 
         order = self.open_market_order(amount=base_amount)
 
-        price = order['average']
-        volume = order['amount']
-
-        quote_amount = self.get_quote_amount(order)
+        price = order.price
+        volume = order.volume
 
         deal = await self.db_helper.open_deal()
 
-        db_order = await self.db_helper.create_open_order(deal_id=deal.id, price=price, volume=volume)
+        await self.db_helper.create_open_order(deal_id=deal.id, price=price, volume=volume)
 
-        return quote_amount, price
+        return order.quote_amount, price
 
     async def average_deal_process(self, amount: float):
-        self.ensure_deal_opened()
+        # Not necessary for current strategy
+        # self.ensure_deal_opened()
 
         base_amount = self.get_base_amount(quote_amount=amount)
 
         order = self.average_market_order(amount=base_amount)
 
-        price = order['average']
-        volume = order['amount']
-
         deal = await self.db_helper.get_deal()
-        db_order = await self.db_helper.create_average_order(deal_id=deal.id, price=price, volume=volume)
+        await self.db_helper.create_average_order(deal_id=deal.id, price=order.price, volume=order.volume)
 
         safety_count = await self.db_helper.average_deal(deal_id=deal.id)
 
-        quote_amount = self.get_quote_amount(order=order)
-
-        return safety_count, quote_amount
+        return safety_count, order.quote_amount
 
     async def close_deal_process(self, amount: float = None):
         self.ensure_deal_opened()
