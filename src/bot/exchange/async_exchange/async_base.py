@@ -26,7 +26,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
         pass
 
     async def get_open_positions_info(self) -> List[ActiveDeal]:
-        deals = get_opened_deals()
+        deals = await get_opened_deals()
 
         exchange_positions = await self.fetch_opened_positions()
 

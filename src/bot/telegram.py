@@ -40,8 +40,8 @@ class Telegram:
 
     @staticmethod
     async def stats_handler(update: Update, context: CallbackContext) -> None:
-        total_pnl = get_total_pnl()
-        daily_png = get_daily_pnl()
+        total_pnl = await get_total_pnl()
+        daily_png = await get_daily_pnl()
 
         await update.message.reply_text(
             f'Daily PNL: {daily_png}\n'
