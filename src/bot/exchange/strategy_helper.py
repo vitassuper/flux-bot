@@ -30,7 +30,7 @@ class StrategyHelper:
 
         return percentage.quantize(Decimal('0.01')) * self.get_sign()
 
-    def calculate_position_pnl_percentage(self, avg_price: float, close_price: float, leverage: int):
+    def calculate_position_pnl_percentage(self, avg_price: Decimal, close_price: Decimal, leverage: int):
         return self.calculate_pnl_percentage(close_price, avg_price) * Decimal(leverage)
 
     @staticmethod

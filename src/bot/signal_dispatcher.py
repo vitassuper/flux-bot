@@ -50,24 +50,16 @@ class SignalDispatcher:
             await self.notifier.send_message()
 
     async def handle_open_signal(self, amount: float):
-        opened_position = await self.strategy.open_deal(amount=amount)
+        opened_position_message = await self.strategy.open_deal(amount=amount)
 
-        self.notifier.add_message_to_stack(
-            f'Opened position: {opened_position.pair}, size: {opened_position.quote_amount}$')
+        self.notifier.add_message_to_stack(str(opened_position_message))
 
     async def handle_average_signal(self, amount: float):
-        averaged_position = await self.strategy.average_deal(amount=amount)
+        averaged_position_message = await self.strategy.average_deal(amount=amount)
 
-        self.notifier.add_message_to_stack(
-            f'Averaged position, pair: {averaged_position.pair}, size: {averaged_position.quote_amount}$ safety orders: {averaged_position.safety_orders_count}')
+        self.notifier.add_message_to_stack(str(averaged_position_message))
 
     async def handle_close_signal(self, amount: float):
-        closed_position = await self.strategy.close_deal(amount=amount)
+        closed_position_message = await self.strategy.close_deal(amount=amount)
 
-        self.notifier.add_message_to_stack((
-            f'{closed_position.pair}\n'
-            f'Profit:{closed_position.profit}💰💰💰 ({closed_position.profit_percentage}%)\n'
-            f'Size: {closed_position.quote_amount}$\n'
-            f'Duration: {closed_position.duration}\n'
-            f'Safety orders: {closed_position.safety_orders_count}'
-        ))
+        self.notifier.add_message_to_stack(str(closed_position_message))

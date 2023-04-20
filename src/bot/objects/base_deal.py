@@ -1,8 +1,11 @@
+from decimal import Decimal
+
+
 class BaseDeal:
     def __init__(
         self,
         pair: str,
-        quote_amount: str,
+        quote_amount: Decimal,
         price: str,
         base_amount: str = '',
         bot_name: str = 'Test bot',

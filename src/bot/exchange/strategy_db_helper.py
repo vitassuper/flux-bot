@@ -26,10 +26,10 @@ class StrategyDBHelper:
 
         return mapping.get((self.side, action), None)
 
-    async def create_open_order(self, deal_id: int, price: float, volume: float) -> Order:
+    async def create_open_order(self, deal_id: int, price: Decimal, volume: Decimal) -> Order:
         return await create_order(deal_id=deal_id, side=self.get_order_side(action='open'), price=price, volume=volume)
 
-    async def create_average_order(self, deal_id: int, price: float, volume: float) -> Order:
+    async def create_average_order(self, deal_id: int, price: Decimal, volume: Decimal) -> Order:
         return await create_order(deal_id=deal_id, side=self.get_order_side(action='open'), price=price, volume=volume)
 
     async def create_close_order(self, deal_id: int, price: Decimal, volume: Decimal) -> Order:

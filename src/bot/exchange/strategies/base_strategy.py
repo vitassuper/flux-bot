@@ -7,9 +7,10 @@ from ccxt import TRUNCATE
 from src.bot.exchange.side.base_side import BaseSide
 from src.bot.exchange.strategy_db_helper import StrategyDBHelper
 from src.bot.exchange.strategy_helper import StrategyHelper
-from src.bot.objects.averaged_deal import AveragedDeal
+from src.bot.objects.messages.averaged_deal_message import AveragedDealMessage
 from src.bot.objects.closed_deal import ClosedDeal
-from src.bot.objects.opened_deal import OpenedDeal
+from src.bot.objects.messages.closed_deal_message import ClosedDealMessage
+from src.bot.objects.messages.opened_deal_message import OpenedDealMessage
 from src.bot.objects.order import Order
 
 
@@ -34,7 +35,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def close_deal_process(self, amount: float = None):
+    async def close_deal_process(self, amount: float = None) -> ClosedDeal:
         pass
 
     @abc.abstractmethod
@@ -43,34 +44,34 @@ class BaseStrategy(metaclass=abc.ABCMeta):
 
     # Helpers
 
-    async def open_deal(self, amount: float) -> OpenedDeal:
+    async def open_deal(self, amount: float) -> OpenedDealMessage:
         quote_amount, price = await self.open_deal_process(amount=amount)
 
-        return OpenedDeal(
+        return OpenedDealMessage(
             pair=self.pair,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
-            price='0')
+            price=price)
 
-    async def average_deal(self, amount: float) -> AveragedDeal:
+    async def average_deal(self, amount: float) -> AveragedDealMessage:
         safety_count, quote_amount = await self.average_deal_process(amount=amount)
 
-        return AveragedDeal(
+        return AveragedDealMessage(
             pair=self.pair,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
             safety_orders_count=safety_count,
             price='0'
         )
 
-    async def close_deal(self, amount: float) -> ClosedDeal:
-        deal, pnl_percentage = await self.close_deal_process(amount=amount)
+    async def close_deal(self, amount: float) -> ClosedDealMessage:
+        closed_deal = await self.close_deal_process(amount=amount)
 
-        return ClosedDeal(
+        return ClosedDealMessage(
             pair=self.pair,
-            quote_amount='Unknown',
-            safety_orders_count=deal.safety_order_count,
-            duration=StrategyHelper.get_time_duration_string(date_open=deal.date_open, date_close=datetime.now()),
-            profit=self.exchange.ccxt_exchange.decimal_to_precision(deal.pnl, TRUNCATE, 4),
-            profit_percentage=pnl_percentage,
+            quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, closed_deal.quote_amount),
+            safety_orders_count=closed_deal.deal.safety_order_count,
+            duration=StrategyHelper.get_time_duration_string(date_open=closed_deal.deal.date_open, date_close=datetime.now()),
+            profit=self.exchange.ccxt_exchange.decimal_to_precision(closed_deal.deal.pnl, TRUNCATE, 4),
+            profit_percentage=closed_deal.pnl_percentage,
             price='0'
         )
 

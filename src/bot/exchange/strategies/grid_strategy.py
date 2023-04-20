@@ -1,4 +1,5 @@
 from src.bot.exchange.strategies.base_strategy import BaseStrategy
+from src.bot.objects.closed_deal import ClosedDeal
 
 
 class GridStrategy(BaseStrategy):
@@ -33,7 +34,7 @@ class GridStrategy(BaseStrategy):
 
         return safety_count, order.quote_amount
 
-    async def close_deal_process(self, amount: float = None):
+    async def close_deal_process(self, amount: float = None) -> ClosedDeal:
         self.ensure_deal_opened()
 
         deal = await self.db_helper.get_deal()
@@ -54,4 +55,4 @@ class GridStrategy(BaseStrategy):
 
         deal = await self.db_helper.close_deal(deal_id=deal.id, pnl=pnl)
 
-        return deal, pnl_percentage
+        return ClosedDeal(deal=deal, pnl_percentage=pnl_percentage, price=order.price, quote_amount=order.quote_amount)
