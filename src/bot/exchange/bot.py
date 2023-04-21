@@ -38,7 +38,7 @@ class Bot:
 
     def get_side(self) -> BaseSide:
         if self.bot_id in range(15, 20) or self.bot_id == 3:
-            LongSide(
+            return LongSide(
                 exchange=self.exchange, margin_type=self.margin_type)
 
         return ShortSide(exchange=self.exchange, margin_type=self.margin_type)
