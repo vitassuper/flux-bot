@@ -125,7 +125,7 @@ class Okex(BaseExchange):
     def set_leverage_for_long_position(self, pair: str, leverage: int,
                                        margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
         self.set_leverage(leverage=leverage,
-                          pair=pair, side='long', margin_type=margin_type)
+                          pair=pair, side=SideType.long, margin_type=margin_type)
 
     def sell_short_position(self, pair: str, amount: float,
                             margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):

@@ -64,11 +64,9 @@ async def increment_safety_orders_count(deal_id):
 
 async def get_pnl_sum(start_date: datetime = None):
     async with async_session() as session:
-        query = select(func.sum(Deal.pnl))
-
-        if start_date:
-            query.where(Deal.date_close >= start_date)
+        query = select(func.sum(Deal.pnl)).where(Deal.date_close >= start_date) if start_date else select(
+            func.sum(Deal.pnl))
 
         result = await session.execute(query)
 
-        return result.scalars().one_or_none() or 0
+        return result.scalar() or 0

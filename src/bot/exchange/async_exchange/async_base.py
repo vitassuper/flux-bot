@@ -4,7 +4,7 @@ from typing import List
 from ccxt.base.decimal_to_precision import TRUNCATE
 
 from src.app.services.deal import get_opened_deals
-from src.bot.objects.active_deal import ActiveDeal
+from src.bot.objects.messages.active_deal_message import ActiveDealMessage
 
 
 class BaseExchange(metaclass=abc.ABCMeta):
@@ -21,11 +21,11 @@ class BaseExchange(metaclass=abc.ABCMeta):
     async def fetch_opened_positions(self):
         pass
 
-    @staticmethod
-    def get_exchange_name():
+    @abc.abstractmethod
+    def get_exchange_name(self):
         pass
 
-    async def get_open_positions_info(self) -> List[ActiveDeal]:
+    async def get_open_positions_info(self) -> List[ActiveDealMessage]:
         deals = await get_opened_deals()
 
         exchange_positions = await self.fetch_opened_positions()
@@ -46,7 +46,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
                     symbol, item['liquidationPrice']) if item['liquidationPrice'] else None
 
                 positions.append(
-                    ActiveDeal(
+                    ActiveDealMessage(
                         pair=item['symbol'],
                         margin=self.exchange.decimal_to_precision(
                             item['initialMargin'], TRUNCATE, 4),

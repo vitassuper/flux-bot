@@ -33,8 +33,7 @@ async def get_total_pnl() -> float:
 
 
 async def get_daily_pnl() -> float:
-    now = datetime.now()
-    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     return await repository.get_pnl_sum(start_date=midnight)
 

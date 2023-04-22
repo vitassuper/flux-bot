@@ -47,15 +47,26 @@ class BaseStrategy(metaclass=abc.ABCMeta):
     async def open_deal(self, amount: float) -> OpenedDealMessage:
         quote_amount, price = await self.open_deal_process(amount=amount)
 
+        deal = await self.db_helper.get_deal()
+
         return OpenedDealMessage(
+            title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
             pair=self.pair,
+            base_amount=self.get_base_amount(quote_amount),
+            deal_id=deal.id,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
-            price=price)
+            price=price
+        )
 
     async def average_deal(self, amount: float) -> AveragedDealMessage:
         safety_count, quote_amount = await self.average_deal_process(amount=amount)
 
+        deal = await self.db_helper.get_deal()
+
         return AveragedDealMessage(
+            title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
+            base_amount=self.get_base_amount(quote_amount),
+            deal_id=deal.id,
             pair=self.pair,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
             safety_orders_count=safety_count,
@@ -66,7 +77,10 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         closed_deal = await self.close_deal_process(amount=amount)
 
         return ClosedDealMessage(
+            title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
+            deal_id=closed_deal.deal.id,
             pair=self.pair,
+            base_amount=self.get_base_amount(float(closed_deal.quote_amount)),
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, closed_deal.quote_amount),
             safety_orders_count=closed_deal.deal.safety_order_count,
             duration=StrategyHelper.get_time_duration_string(date_open=closed_deal.deal.date_open, date_close=datetime.now()),
@@ -122,4 +136,5 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         return order['amount'] * market['contractSize'] * order['average']
 
     def get_base_amount(self, quote_amount: float) -> float:
-        return self.side.exchange.get_base_amount(pair=self.pair, quote_amount=quote_amount)
+        #TODO: all types should be decimal
+        return self.side.exchange.get_base_amount(pair=self.pair, quote_amount=float(quote_amount))

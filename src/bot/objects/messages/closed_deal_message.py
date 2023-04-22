@@ -1,27 +1,18 @@
-from src.bot.objects.base_deal import BaseDeal
-from decimal import Decimal
+from dataclasses import dataclass
+
+from src.bot.objects.messages.base_deal_message import BaseDeal
 
 
+@dataclass
 class ClosedDealMessage(BaseDeal):
-    def __init__(
-        self,
-        pair: str,
-        quote_amount: Decimal,
-        safety_orders_count: int,
-        duration: str,
-        profit: str,
-        profit_percentage: float,
-        price: str
-    ):
-        self.safety_orders_count = safety_orders_count
-        self.duration = duration
-        self.profit = profit
-        self.profit_percentage = profit_percentage
-
-        super().__init__(pair=pair, quote_amount=quote_amount, price=price)
+    safety_orders_count: int
+    duration: str
+    profit: str
+    profit_percentage: float
 
     def __str__(self):
         return (
+            f'{super().__str__()}\n'
             f'{self.pair}\n'
             f'Profit:{self.profit}💰💰💰 ({self.profit_percentage}%)\n'
             f'Size: {self.quote_amount}$\n'

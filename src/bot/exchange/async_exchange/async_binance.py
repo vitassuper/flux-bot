@@ -17,8 +17,7 @@ class Binance(BaseExchange):
 
         super().__init__(exchange=exchange)
 
-    @staticmethod
-    def get_exchange_name():
+    def get_exchange_name(self):
         return 'Binance'
 
     async def fetch_opened_positions(self):
