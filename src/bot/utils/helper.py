@@ -21,6 +21,10 @@ class Helper:
         return sum(order.volume for order in orders)
 
     @staticmethod
+    def calculate_total_quote_amount(orders: List[Order]) -> Decimal:
+        return sum(order.volume * order.price for order in orders)
+
+    @staticmethod
     def calculate_realized_pnl(volume: Decimal, avg_price: Decimal, close_volume: Decimal, close_avg_price: Decimal,
                                fee: Decimal, sign: int):
         entry_sum = volume * avg_price

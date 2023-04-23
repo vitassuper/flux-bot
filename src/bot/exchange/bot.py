@@ -20,11 +20,17 @@ class Bot:
         if self.bot_id == 1:
             return Okex(self.bot_id)
         if self.bot_id == 2:
-            return Binance(self.bot_id)
+            return None
         if self.bot_id == 3:
             return Okex(self.bot_id)
 
         if self.bot_id in range(10, 20):
+            return Okex(self.bot_id)
+
+        if self.bot_id in range(100, 200):
+            return Binance(self.bot_id)
+
+        if self.bot_id in range (200, 300):
             return Okex(self.bot_id)
 
         raise ConnectorException('Unknown bot id')
@@ -38,6 +44,20 @@ class Bot:
 
     def get_side(self) -> BaseSide:
         if self.bot_id in range(15, 20) or self.bot_id == 3:
+            return LongSide(
+                exchange=self.exchange, margin_type=self.margin_type)
+
+        if self.bot_id in range(100, 150):
+            return ShortSide(exchange=self.exchange, margin_type=self.margin_type)
+
+        if self.bot_id in range(150, 200):
+            return LongSide(
+                exchange=self.exchange, margin_type=self.margin_type)
+
+        if self.bot_id in range(200, 250):
+            return ShortSide(exchange=self.exchange, margin_type=self.margin_type)
+
+        if self.bot_id in range(250, 300):
             return LongSide(
                 exchange=self.exchange, margin_type=self.margin_type)
 

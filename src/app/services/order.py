@@ -23,7 +23,9 @@ async def get_deal_stats(deal_id: int) -> DealStats:
         raise NotFoundException('Not found orders')
 
     return DealStats(average_price=Helper.calculate_average_price(orders=orders),
-                     total_volume=Helper.calculate_total_volume(orders=orders))
+                     total_volume=Helper.calculate_total_volume(orders=orders),
+                     total_quote_amount=Helper.calculate_total_quote_amount(orders=orders)
+                     )
 
 
 async def get_orders_volume(deal_id: int) -> float:

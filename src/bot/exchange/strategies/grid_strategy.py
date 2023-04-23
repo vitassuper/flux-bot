@@ -1,12 +1,13 @@
 from src.bot.exchange.strategies.base_strategy import BaseStrategy
 from src.bot.objects.closed_deal import ClosedDeal
+from decimal import Decimal
 
 
 class GridStrategy(BaseStrategy):
     async def open_deal_process(self, amount: float):
         self.set_leverage(20)
 
-        base_amount = self.get_base_amount(quote_amount=amount)
+        base_amount = self.get_base_amount(quote_amount=Decimal(amount))
 
         order = self.open_market_order(amount=base_amount)
 
@@ -23,7 +24,7 @@ class GridStrategy(BaseStrategy):
         # Not necessary for current strategy
         # self.ensure_deal_opened()
 
-        base_amount = self.get_base_amount(quote_amount=amount)
+        base_amount = self.get_base_amount(quote_amount=Decimal(amount))
 
         order = self.average_market_order(amount=base_amount)
 
