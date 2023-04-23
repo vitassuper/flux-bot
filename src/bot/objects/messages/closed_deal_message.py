@@ -14,7 +14,7 @@ class ClosedDealMessage(BaseDeal):
         return (
             f'{super().__str__()}\n'
             f'{self.pair}\n'
-            f'Profit:{self.profit}💰💰💰 ({self.profit_percentage}%)\n'
+            f"Profit:{self.profit} {'💰💰💰' if float(self.profit) > 0 else '💀💀💀'} ({self.profit_percentage}%)\n"
             f'Size: {self.quote_amount}$\n'
             f'Duration: {self.duration}\n'
             f'Safety orders: {self.safety_orders_count}'

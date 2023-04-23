@@ -55,7 +55,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
             base_amount=0.1, #TODO: remove magic number
             deal_id=deal.id,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
-            price=price
+            price=price,
+            side=self.side.get_side_type()
         )
 
     async def average_deal(self, amount: float) -> AveragedDealMessage:
@@ -72,6 +73,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
             safety_orders_count=safety_count,
             price='0',
+            side=self.side.get_side_type(),
             total_quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair,
                                                                              deal_stats.total_quote_amount *
                                                                              self.contract_size)
@@ -91,7 +93,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
                                                              date_close=datetime.now()),
             profit=self.exchange.ccxt_exchange.decimal_to_precision(closed_deal.deal.pnl, TRUNCATE, 4),
             profit_percentage=closed_deal.pnl_percentage,
-            price='0'
+            price='0',
+            side=self.side.get_side_type()
         )
 
     def ensure_deal_opened(self):
