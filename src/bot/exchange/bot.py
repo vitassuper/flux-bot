@@ -18,11 +18,11 @@ class Bot:
 
     def get_exchange(self):
         if self.bot_id == 1:
-            return Okex(self.bot_id)
+            return None
         if self.bot_id == 2:
             return None
         if self.bot_id == 3:
-            return Okex(self.bot_id)
+            return None
 
         if self.bot_id in range(10, 20):
             return Okex(self.bot_id)
