@@ -4,11 +4,8 @@ from decimal import Decimal
 
 
 class GridStrategy(BaseStrategy):
-    async def open_deal_process(self, amount: float):
+    async def open_deal_process(self, base_amount: Decimal):
         self.set_leverage(20)
-
-        base_amount = self.get_base_amount(quote_amount=Decimal(amount))
-
         order = self.open_market_order(amount=base_amount)
 
         price = order.price
@@ -20,11 +17,9 @@ class GridStrategy(BaseStrategy):
 
         return order.quote_amount, price
 
-    async def average_deal_process(self, amount: float):
+    async def average_deal_process(self, base_amount: Decimal):
         # Not necessary for current strategy
         # self.ensure_deal_opened()
-
-        base_amount = self.get_base_amount(quote_amount=Decimal(amount))
 
         order = self.average_market_order(amount=base_amount)
 

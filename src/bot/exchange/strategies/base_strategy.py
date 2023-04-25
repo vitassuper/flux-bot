@@ -31,7 +31,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
     # Abstract methods
 
     @abc.abstractmethod
-    async def open_deal_process(self, amount: float):
+    async def open_deal_process(self, base_amount: Decimal):
         pass
 
     @abc.abstractmethod
@@ -39,13 +39,14 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def average_deal_process(self, amount: float):
+    async def average_deal_process(self, base_amount: Decimal):
         pass
 
     # Helpers
 
     async def open_deal(self, amount: float) -> OpenedDealMessage:
-        quote_amount, price = await self.open_deal_process(amount=amount)
+        base_amount = self.get_base_amount(quote_amount=Decimal(amount))
+        quote_amount, price = await self.open_deal_process(base_amount=base_amount)
 
         deal = await self.db_helper.get_deal()
 
@@ -60,7 +61,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         )
 
     async def average_deal(self, amount: float) -> AveragedDealMessage:
-        safety_count, quote_amount = await self.average_deal_process(amount=amount)
+        base_amount = self.get_base_amount(quote_amount=Decimal(amount))
+        safety_count, quote_amount = await self.average_deal_process(base_amount=base_amount)
 
         deal = await self.db_helper.get_deal()
         deal_stats = await self.db_helper.get_deal_stats(deal_id=deal.id)
@@ -106,8 +108,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
     def get_opened_position(self):
         return self.side.get_opened_position(pair=self.pair)
 
-    def open_market_order(self, amount: float) -> Order:
-        order = self.side.open_market_order(pair=self.pair, amount=amount)
+    def open_market_order(self, amount: Decimal) -> Order:
+        order = self.side.open_market_order(pair=self.pair, amount=float(amount))
 
         return Order(
             price=Decimal(order['average']),
@@ -115,8 +117,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
             quote_amount=Decimal(self.get_quote_amount(order))
         )
 
-    def average_market_order(self, amount: float) -> Order:
-        order = self.side.open_market_order(pair=self.pair, amount=amount)
+    def average_market_order(self, amount: Decimal) -> Order:
+        order = self.side.open_market_order(pair=self.pair, amount=float(amount))
 
         return Order(
             price=Decimal(order['average']),
@@ -141,6 +143,6 @@ class BaseStrategy(metaclass=abc.ABCMeta):
     def get_quote_amount(self, order):
         return order['amount'] * float(self.contract_size) * order['average']
 
-    def get_base_amount(self, quote_amount: Decimal) -> float:
+    def get_base_amount(self, quote_amount: Decimal) -> Decimal:
         # TODO: all types should be decimal
-        return self.side.exchange.get_base_amount(pair=self.pair, quote_amount=float(quote_amount))
+        return Decimal(self.side.exchange.get_base_amount(pair=self.pair, quote_amount=quote_amount))

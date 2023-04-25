@@ -1,15 +1,6 @@
 run:
 	docker-compose up -d -V
 
-runb:
-	docker-compose up -V
-
-run-poetry:
-	poetry install && poetry run bot
-
-format:
-	poetry run black .
-
 build:
 	docker-compose build
 

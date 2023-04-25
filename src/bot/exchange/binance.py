@@ -1,5 +1,5 @@
 from typing import Union
-
+from decimal import Decimal
 import ccxt
 
 from src.bot.exceptions.connector_exception import ConnectorException
@@ -91,7 +91,7 @@ class Binance(BaseExchange):
             amount=amount,
         )
 
-    def get_base_amount(self, pair: str, quote_amount: float):
+    def get_base_amount(self, pair: str, quote_amount: Decimal):
         market = self.ccxt_exchange.market(pair)
         price = self.ccxt_exchange.fetch_ticker(pair)['last']
 
@@ -103,11 +103,11 @@ class Binance(BaseExchange):
 
         minimal_amount = max(minimal_quote_amount, min_notional)
 
-        if quote_amount < minimal_amount:
+        if float(quote_amount) < minimal_amount:
             raise ConnectorException(
                 f'low amount for pair {pair} - min amount: {minimal_amount}')
 
-        return self.ccxt_exchange.amount_to_precision(pair, amount=quote_amount / price)
+        return self.ccxt_exchange.amount_to_precision(pair, amount=float(quote_amount / price))
 
     def buy_long_position(self, pair: str, amount: float,
                           margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):

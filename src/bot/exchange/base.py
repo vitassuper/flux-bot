@@ -1,6 +1,7 @@
 import abc
 import re
 from typing import Union
+from decimal import Decimal
 
 from src.bot.types.margin_type import MarginType
 
@@ -73,7 +74,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def get_base_amount(self, pair: str, quote_amount: float):
+    def get_base_amount(self, pair: str, quote_amount: Decimal):
         pass
 
     @abc.abstractmethod
