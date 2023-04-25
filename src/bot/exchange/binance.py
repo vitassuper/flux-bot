@@ -107,7 +107,7 @@ class Binance(BaseExchange):
             raise ConnectorException(
                 f'low amount for pair {pair} - min amount: {minimal_amount}')
 
-        return self.ccxt_exchange.amount_to_precision(pair, amount=float(quote_amount / price))
+        return self.ccxt_exchange.amount_to_precision(pair, amount=float(quote_amount) / price)
 
     def buy_long_position(self, pair: str, amount: float,
                           margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
