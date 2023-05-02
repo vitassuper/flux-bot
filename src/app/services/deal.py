@@ -24,6 +24,15 @@ async def get_deal(bot_id: int, pair: str) -> Deal:
     return deal
 
 
+async def get_or_create_deal(bot_id: int, pair: str) -> Deal:
+    deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair)
+
+    if not deal:
+        deal = await repository.create_deal(bot_id=bot_id, pair=pair, date_open=datetime.now())
+
+    return deal
+
+
 async def get_opened_deals() -> List[Deal]:
     return await repository.get_open_deals()
 

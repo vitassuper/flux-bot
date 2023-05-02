@@ -1,3 +1,4 @@
+from src.app.repositories.bot import get_bot
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.binance import Binance
 from src.bot.exchange.okx import Okex
@@ -8,30 +9,51 @@ from src.bot.exchange.strategies.grid_strategy import GridStrategy
 from src.bot.exchange.strategies.simple_strategy import SimpleStrategy
 from src.bot.types.margin_type import MarginType
 
+from src.bot.utils.helper import Helper
+
 
 class Bot:
-    def __init__(self, bot_id: int, pair: str) -> None:
+    def __init__(self, bot_id: int, pair: str, type_of_signal: str) -> None:
+        self.margin_type = None
+        self.exchange = None
+        self.type_of_signal = type_of_signal
         self.bot_id = bot_id
-        self.exchange = self.get_exchange()
-        self.pair = self.guess_symbol_from_tv(symbol=pair)
+        self.pair = pair
+
+    async def process(self):
+        if self.bot_id in range(100, 300):
+            bot = await get_bot(bot_id=self.bot_id)
+
+            if not bot.enabled and self.type_of_signal == 'open':
+                raise ConnectorException('Bot disabled')
+
+        self.exchange = await self.get_exchange()
+        self.pair = self.guess_symbol_from_tv(symbol=self.pair)
         self.margin_type = self.get_margin_type()
 
-    def get_exchange(self):
-        if self.bot_id == 1:
-            return None
-        if self.bot_id == 2:
-            return None
-        if self.bot_id == 3:
-            return None
+        return self.get_strategy(self.get_side())
 
+    async def get_exchange_credentials(self):
+        bot = await get_bot(bot_id=self.bot_id)
+
+        api_key = Helper.decrypt_string(bot.api_key)
+        api_secret = Helper.decrypt_string(bot.api_secret)
+
+        return api_key, api_secret
+
+    async def get_exchange(self):
         if self.bot_id in range(10, 20):
             return Okex(self.bot_id)
 
         if self.bot_id in range(100, 200):
-            return Binance(self.bot_id)
+            key, secret = await self.get_exchange_credentials()
 
-        if self.bot_id in range (200, 300):
-            return Okex(self.bot_id)
+            return Binance(self.bot_id, key, secret, False)
+
+        if self.bot_id in range(200, 300):
+            key, secret = await self.get_exchange_credentials()
+
+            return Binance(self.bot_id, key, secret, True)
 
         raise ConnectorException('Unknown bot id')
 

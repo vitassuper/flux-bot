@@ -1,6 +1,7 @@
+from decimal import Decimal
+
 from src.bot.exchange.strategies.base_strategy import BaseStrategy
 from src.bot.objects.closed_deal import ClosedDeal
-from decimal import Decimal
 
 
 class GridStrategy(BaseStrategy):
@@ -21,9 +22,11 @@ class GridStrategy(BaseStrategy):
         # Not necessary for current strategy
         # self.ensure_deal_opened()
 
+        self.set_leverage(20)
         order = self.average_market_order(amount=base_amount)
 
-        deal = await self.db_helper.get_deal()
+        deal = await self.db_helper.get_or_create_deal()
+
         await self.db_helper.create_average_order(deal_id=deal.id, price=order.price, volume=order.volume)
 
         safety_count = await self.db_helper.average_deal(deal_id=deal.id)

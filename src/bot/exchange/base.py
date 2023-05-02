@@ -1,7 +1,7 @@
 import abc
 import re
-from typing import Union
 from decimal import Decimal
+from typing import Union
 
 from src.bot.types.margin_type import MarginType
 

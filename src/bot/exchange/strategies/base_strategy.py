@@ -29,7 +29,6 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         self.db_helper = StrategyDBHelper(side=side.get_side_type(), bot_id=self.bot_id, pair=self.pair)
 
     # Abstract methods
-
     @abc.abstractmethod
     async def open_deal_process(self, base_amount: Decimal):
         pass
@@ -43,7 +42,6 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         pass
 
     # Helpers
-
     async def open_deal(self, amount: float) -> OpenedDealMessage:
         base_amount = self.get_base_amount(quote_amount=Decimal(amount))
         quote_amount, price = await self.open_deal_process(base_amount=base_amount)
@@ -53,7 +51,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         return OpenedDealMessage(
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
             pair=self.pair,
-            base_amount=0.1, #TODO: remove magic number
+            base_amount=0.1,  # TODO: remove magic number
             deal_id=deal.id,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
             price=price,
@@ -69,7 +67,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
 
         return AveragedDealMessage(
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
-            base_amount=0.1, #TODO: remove magic number,
+            base_amount=0.1,  # TODO: remove magic number,
             deal_id=deal.id,
             pair=self.pair,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
@@ -88,7 +86,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
             deal_id=closed_deal.deal.id,
             pair=self.pair,
-            base_amount=0.1, #TODO: remove magic number,
+            base_amount=0.1,  # TODO: remove magic number,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, closed_deal.quote_amount),
             safety_orders_count=closed_deal.deal.safety_order_count,
             duration=StrategyHelper.get_time_duration_string(date_open=closed_deal.deal.date_open,

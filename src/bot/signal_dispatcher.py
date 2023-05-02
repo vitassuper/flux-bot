@@ -20,9 +20,9 @@ class SignalDispatcher:
                 f'Received <b>{signal.type_of_signal}</b> signal: pair: {signal.pair}' + (
                     f' amount: {signal.amount}' if hasattr(signal, 'amount') else ''))
 
-            bot = Bot(bot_id=signal.bot_id, pair=signal.pair)
+            bot = Bot(bot_id=signal.bot_id, pair=signal.pair, type_of_signal=signal.type_of_signal)
 
-            self.strategy = bot.get_strategy(bot.get_side())
+            self.strategy = await bot.process()
 
             self.notifier.set_exchange_name(bot.get_bot_name())
 

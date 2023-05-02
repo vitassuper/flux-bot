@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Literal
 from decimal import Decimal
+from typing import Literal
 
 from src.app.models import Order, Deal
-from src.app.services.deal import update_deal, get_deal, create_deal, increment_safety_orders_count
+from src.app.services.deal import update_deal, get_deal, create_deal, increment_safety_orders_count, get_or_create_deal
 from src.app.services.order import create_order, get_orders_volume, get_deal_stats
 from src.bot.objects.deal_stats import DealStats
 from src.bot.types.order_side_type import OrderSideType
@@ -40,6 +40,9 @@ class StrategyDBHelper:
 
     async def get_deal(self) -> Deal:
         return await get_deal(bot_id=self.bot_id, pair=self.pair)
+
+    async def get_or_create_deal(self) -> Deal:
+        return await get_or_create_deal(bot_id=self.bot_id, pair=self.pair)
 
     async def open_deal(self) -> Deal:
         return await create_deal(bot_id=self.bot_id, pair=self.pair, date_open=datetime.now())

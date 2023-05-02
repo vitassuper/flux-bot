@@ -1,8 +1,12 @@
+import base64
 from decimal import Decimal
 from typing import List
 
+from cryptography.fernet import Fernet
+
 from src.app.models import Order
 from src.bot.exceptions.connector_exception import ConnectorException
+from src.core.config import settings
 
 
 class Helper:
@@ -36,3 +40,17 @@ class Helper:
         entry_fee = entry_sum * fee
 
         return u_pnl - entry_fee - exit_fee
+
+    @staticmethod
+    def encrypt_string(string: str) -> str:
+        key = base64.urlsafe_b64decode(settings.APP_KEY)
+        cipher_suite = Fernet(key)
+
+        return cipher_suite.encrypt(string.encode('utf-8')).decode('utf-8')
+
+    @staticmethod
+    def decrypt_string(string: str) -> str:
+        key = base64.urlsafe_b64decode(settings.APP_KEY)
+        cipher_suite = Fernet(key)
+
+        return cipher_suite.decrypt(string.encode('utf-8')).decode('utf-8')

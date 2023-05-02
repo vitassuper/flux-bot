@@ -37,7 +37,8 @@ async def update_deal(deal_id: int, **update_values) -> Deal:
 
 async def get_bot_last_deal(bot_id: int, pair: str) -> Deal:
     async with async_session() as session:
-        query = select(Deal).where(and_(Deal.bot_id == bot_id, Deal.pair == pair)).order_by(Deal.id.desc())
+        query = select(Deal).where(and_(Deal.bot_id == bot_id, Deal.pair == pair, Deal.date_close.is_(None))).order_by(
+            Deal.id.desc())
         deals = await session.execute(query)
 
         return deals.scalar()
