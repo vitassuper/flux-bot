@@ -15,4 +15,4 @@ class Order(Base):
     side: Mapped[str] = mapped_column(String(10), nullable=False)
     price: Mapped[decimal] = mapped_column(Numeric(precision=20, scale=10), nullable=False)
     volume: Mapped[decimal] = mapped_column(Numeric(precision=20, scale=10), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True, default=datetime.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True, default=datetime.now)
