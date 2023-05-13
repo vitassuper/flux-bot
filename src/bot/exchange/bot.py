@@ -1,4 +1,5 @@
 from src.app.repositories.bot import get_bot
+from src.app.services.deal import is_deal_exist
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.binance import Binance
 from src.bot.exchange.okx import Okex
@@ -21,14 +22,18 @@ class Bot:
         self.pair = pair
 
     async def process(self):
+        self.exchange = await self.get_exchange()
+        self.pair = self.guess_symbol_from_tv(symbol=self.pair)
+
         if self.bot_id in range(100, 300):
             bot = await get_bot(bot_id=self.bot_id)
 
-            if not bot.enabled and self.type_of_signal == 'open':
-                raise ConnectorException('Bot disabled')
+            if not bot.enabled:
+                if self.type_of_signal == 'open':
+                    raise ConnectorException('Bot disabled')
+                elif self.type_of_signal == 'add' and not await is_deal_exist(self.bot_id, self.pair):
+                    raise ConnectorException('Bot disabled')
 
-        self.exchange = await self.get_exchange()
-        self.pair = self.guess_symbol_from_tv(symbol=self.pair)
         self.margin_type = self.get_margin_type()
 
         return self.get_strategy(self.get_side())

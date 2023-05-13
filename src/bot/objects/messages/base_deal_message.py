@@ -16,4 +16,4 @@ class BaseDeal:
     title: str
 
     def __str__(self):
-        return f"{self.title} - Deal id: #{self.deal_id} {'🟥' if self.side == SideType.short else '🟩'}"
+        return f"Deal id: #{self.deal_id} {'🟥' if self.side == SideType.short else '🟩'}"

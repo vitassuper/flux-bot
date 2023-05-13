@@ -24,6 +24,12 @@ async def get_deal(bot_id: int, pair: str) -> Deal:
     return deal
 
 
+async def is_deal_exist(bot_id: int, pair: str) -> bool:
+    deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair)
+
+    return bool(deal)
+
+
 async def get_or_create_deal(bot_id: int, pair: str) -> Deal:
     deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair)
 
