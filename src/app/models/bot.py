@@ -10,6 +10,7 @@ class Bot(Base):
     __tablename__ = 'bots'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
     api_key: Mapped[str] = mapped_column(String(255), nullable=False)
     api_secret: Mapped[str] = mapped_column(String(255), nullable=False)
