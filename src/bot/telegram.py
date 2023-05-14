@@ -8,17 +8,18 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
+from telegram.ext._utils.types import HandlerCallback
 
 from src.app.services.deal import get_daily_pnl, get_total_pnl
 from src.bot.exchange.async_exchange.async_base import BaseExchange
 from src.bot.exchange.async_exchange.async_binance import Binance
 from src.bot.exchange.async_exchange.async_okx import Okex
-from src.bot.objects.active_deal import ActiveDeal
+from src.bot.objects.messages.active_deal_message import ActiveDealMessage
 from src.core.config import settings
 
 
 class Telegram:
-    keyboard_keys: List[Dict[str, Union[str, Tuple[Update, CallbackContext]]]] = []
+    keyboard_keys: List[Dict[str, Union[str, HandlerCallback[Update, CallbackContext, None]]]] = []
 
     @classmethod
     def initialize(cls):
@@ -40,8 +41,8 @@ class Telegram:
 
     @staticmethod
     async def stats_handler(update: Update, context: CallbackContext) -> None:
-        total_pnl = get_total_pnl()
-        daily_png = get_daily_pnl()
+        total_pnl = await get_total_pnl()
+        daily_png = await get_daily_pnl()
 
         await update.message.reply_text(
             f'Daily PNL: {daily_png}\n'
@@ -79,25 +80,15 @@ def run():
 
 
 async def get_from_exchange(exchange: BaseExchange):
-    text = f'{BaseExchange.get_exchange_name()}:\n\n'
-    positions: List[ActiveDeal] = await exchange.get_open_positions_info()
+    text = f'{exchange.get_exchange_name()}:\n\n'
+
+    positions: List[ActiveDealMessage] = await exchange.get_open_positions_info()
 
     if not positions:
         return text + 'No positions'
 
     for position in positions:
-        text += (
-            f'{position.pair}\n'
-            f"{position.side.capitalize()} {'🟥' if position.side == 'short' else '🟩'}\n"
-            f'Margin: {position.margin}\n'
-            f'Current price: {position.current_price}\n'
-            f'Avg price: {position.avg_price}\n'
-            f'Unrealized PNL: {position.unrealized_pnl}\n'
-            f'liquidationPrice: {position.liquidation_price}\n'
-            f'Pos size: {position.notional_size}💰\n'
-            f'Duration: {position.duration}\n'
-            f'Safety orders {position.safety_orders_count}\n\n'
-        )
+        text += str(position) + '\n'
 
     return text
 

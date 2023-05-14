@@ -1,53 +1,63 @@
 from datetime import datetime
 from typing import List
-from fastapi import HTTPException, status
 
 from src.app.models import Deal
-from src.app.repositories.deal import deal as repository
-from src.app.schemas import DealCreate
-from src.app.schemas.deals import DealUpdate
+from src.app.repositories import deal as repository
+from src.bot.exceptions.not_found_exception import NotFoundException
 
 
-def create_deal(deal: DealCreate) -> Deal:
-    return repository.create(obj_in=deal)
+async def create_deal(bot_id: int, pair: str, date_open: datetime) -> Deal:
+    return await repository.create_deal(bot_id=bot_id, pair=pair, date_open=date_open)
 
 
-def increment_safety_orders_count(bot_id: int, pair: str) -> int:
-    last_record = get_deal(bot_id=bot_id, pair=pair)
-    return repository.increment_safety_orders_count(last_record)
+async def increment_safety_orders_count(deal_id: int) -> int:
+    return await repository.increment_safety_orders_count(deal_id=deal_id)
 
 
-def get_deal(bot_id: int, pair: str) -> Deal:
-    deal = repository.get_bot_last_deal(bot_id, pair)
+async def get_deal(bot_id: int, pair: str) -> Deal:
+    deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair)
 
     if not deal:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail='Deal not found')
+        raise NotFoundException(
+            'The deal with this id does not exist in the system')
+
     return deal
 
 
-def get_opened_deals() -> List[Deal]:
-    return repository.get_open_deals()
+async def is_deal_exist(bot_id: int, pair: str) -> bool:
+    deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair)
+
+    return bool(deal)
 
 
-def get_total_pnl():
-    return repository.get_pnl_sum()
-
-
-def get_daily_pnl():
-    now = datetime.now()
-    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
-
-    return repository.get_pnl_sum(midnight)
-
-
-def update_deal(bot_id: int, pair: str, obj_in: DealUpdate) -> Deal:
-    deal = get_deal(bot_id=bot_id, pair=pair)
+async def get_or_create_deal(bot_id: int, pair: str) -> Deal:
+    deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair)
 
     if not deal:
-        raise HTTPException(
-            status_code=404,
-            detail='The deal with this id does not exist in the system',
-        )
-    deal = repository.update(deal, obj_in)
+        deal = await repository.create_deal(bot_id=bot_id, pair=pair, date_open=datetime.now())
+
+    return deal
+
+
+async def get_opened_deals() -> List[Deal]:
+    return await repository.get_open_deals()
+
+
+async def get_total_pnl() -> float:
+    return await repository.get_pnl_sum()
+
+
+async def get_daily_pnl() -> float:
+    midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    return await repository.get_pnl_sum(start_date=midnight)
+
+
+async def update_deal(deal_id: int, date_close: datetime, pnl: float) -> Deal:
+    deal = await repository.update_deal(deal_id=deal_id, date_close=date_close, pnl=pnl)
+
+    if not deal:
+        raise NotFoundException(
+            'The deal with this id does not exist in the system')
+
     return deal

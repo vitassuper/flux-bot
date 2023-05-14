@@ -1,45 +1,57 @@
+from decimal import Decimal
+
 from src.bot.exchange.strategies.base_strategy import BaseStrategy
+from src.bot.objects.closed_deal import ClosedDeal
 
 
 class GridStrategy(BaseStrategy):
-    def _BaseStrategy__open_deal_process(self, amount: float):
+    async def open_deal_process(self, base_amount: Decimal):
         self.set_leverage(20)
-
-        base_amount = self.get_base_amount(quote_amount=amount)
-
         order = self.open_market_order(amount=base_amount)
 
-        quote_amount = self.get_quote_amount(order)
+        price = order.price
+        volume = order.volume
 
-        self.open_deal_in_db()
+        deal = await self.db_helper.open_deal()
 
-        price = 0
+        await self.db_helper.create_open_order(deal_id=deal.id, price=price, volume=volume)
 
-        return quote_amount, price
+        return order.quote_amount, price
 
-    def _BaseStrategy__average_deal_process(self, amount: float):
-        self.ensure_deal_opened()
+    async def average_deal_process(self, base_amount: Decimal):
+        # Not necessary for current strategy
+        # self.ensure_deal_opened()
 
-        base_amount = self.get_base_amount(quote_amount=amount)
-
+        self.set_leverage(20)
         order = self.average_market_order(amount=base_amount)
 
-        quote_amount = self.get_quote_amount(order)
+        deal = await self.db_helper.get_or_create_deal()
 
-        safety_count = self.average_deal_in_db()
+        await self.db_helper.create_average_order(deal_id=deal.id, price=order.price, volume=order.volume)
 
-        return safety_count, quote_amount
+        safety_count = await self.db_helper.average_deal(deal_id=deal.id)
 
-    def _BaseStrategy__close_deal_process(self, amount: float = None):
-        open_position = self.get_opened_position()
+        return safety_count, order.quote_amount
 
-        base_amount = self.get_base_amount(quote_amount=amount)
+    async def close_deal_process(self, amount: float = None) -> ClosedDeal:
+        self.ensure_deal_opened()
 
-        if round(base_amount / 100 * 125) > open_position['contracts']:
-            base_amount = open_position['contracts']
+        deal = await self.db_helper.get_deal()
 
-        self.close_market_order(base_amount)
+        deal_stats = await self.db_helper.get_deal_stats(deal_id=deal.id)
 
-        deal = self.close_deal_in_db(pnl=0)
+        order = self.close_market_order(deal_stats.total_volume)
 
-        return deal, '0'
+        await self.db_helper.create_close_order(deal_id=deal.id, price=order.price,
+                                                volume=order.volume)
+
+        pnl = self.strategy_helper.calculate_realized_pnl(deal_stats.total_volume,
+                                                          deal_stats.average_price,
+                                                          order.volume,
+                                                          order.price)
+
+        pnl_percentage = self.strategy_helper.calculate_pnl_percentage(deal_stats.average_price, order.price)
+
+        deal = await self.db_helper.close_deal(deal_id=deal.id, pnl=pnl)
+
+        return ClosedDeal(deal=deal, pnl_percentage=pnl_percentage, price=order.price, quote_amount=order.quote_amount)

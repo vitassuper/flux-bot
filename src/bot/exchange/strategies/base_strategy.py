@@ -1,16 +1,17 @@
 import abc
 from datetime import datetime
+from decimal import Decimal
 
 from ccxt import TRUNCATE
 
-from src.app.models import Deal
-from src.app.schemas.deals import DealCreate, DealUpdate
-from src.app.services.deal import create_deal, update_deal, increment_safety_orders_count, get_deal
 from src.bot.exchange.side.base_side import BaseSide
+from src.bot.exchange.strategy_db_helper import StrategyDBHelper
 from src.bot.exchange.strategy_helper import StrategyHelper
-from src.bot.objects.averaged_deal import AveragedDeal
 from src.bot.objects.closed_deal import ClosedDeal
-from src.bot.objects.opened_deal import OpenedDeal
+from src.bot.objects.messages.averaged_deal_message import AveragedDealMessage
+from src.bot.objects.messages.closed_deal_message import ClosedDealMessage
+from src.bot.objects.messages.opened_deal_message import OpenedDealMessage
+from src.bot.objects.order import Order
 
 
 class BaseStrategy(metaclass=abc.ABCMeta):
@@ -20,69 +21,81 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         self.exchange = side.exchange
         self.pair = pair
 
-        self.strategy_helper = StrategyHelper(taker_fee=self.exchange.ccxt_exchange.market(self.pair)['taker'],
-                                              side=side.get_type())
+        self.contract_size = Decimal(self.exchange.get_market(pair=pair)['contractSize'])
+
+        self.strategy_helper = StrategyHelper(taker_fee=Decimal(self.exchange.ccxt_exchange.market(self.pair)['taker']),
+                                              side=side.get_side_type(), contract_size=self.contract_size)
+
+        self.db_helper = StrategyDBHelper(side=side.get_side_type(), bot_id=self.bot_id, pair=self.pair)
 
     # Abstract methods
-
     @abc.abstractmethod
-    def open_deal_process(self, amount: float):
+    async def open_deal_process(self, base_amount: Decimal):
         pass
 
     @abc.abstractmethod
-    def close_deal_process(self, amount: float = None):
+    async def close_deal_process(self, amount: float = None) -> ClosedDeal:
         pass
 
     @abc.abstractmethod
-    def average_deal_process(self, amount: float):
+    async def average_deal_process(self, base_amount: Decimal):
         pass
 
     # Helpers
+    async def open_deal(self, amount: float) -> OpenedDealMessage:
+        base_amount = self.get_base_amount(quote_amount=Decimal(amount))
+        quote_amount, price = await self.open_deal_process(base_amount=base_amount)
 
-    def open_deal(self, amount: float) -> OpenedDeal:
-        quote_amount, price = self.open_deal_process(amount=amount)
+        deal = await self.db_helper.get_deal()
 
-        return OpenedDeal(
+        return OpenedDealMessage(
+            title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
+            pair=self.pair,
+            base_amount=0.1,  # TODO: remove magic number
+            deal_id=deal.id,
+            quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
+            price=price,
+            side=self.side.get_side_type()
+        )
+
+    async def average_deal(self, amount: float) -> AveragedDealMessage:
+        base_amount = self.get_base_amount(quote_amount=Decimal(amount))
+        safety_count, quote_amount = await self.average_deal_process(base_amount=base_amount)
+
+        deal = await self.db_helper.get_deal()
+        deal_stats = await self.db_helper.get_deal_stats(deal_id=deal.id)
+
+        return AveragedDealMessage(
+            title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
+            base_amount=0.1,  # TODO: remove magic number,
+            deal_id=deal.id,
             pair=self.pair,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
-            price='0')
-
-    def average_deal(self, amount: float) -> AveragedDeal:
-        safety_count, quote_amount = self.average_deal_process(amount=amount)
-
-        return AveragedDeal(
-            pair=self.pair,
-            quote_amount=quote_amount,
             safety_orders_count=safety_count,
-            price='0'
+            price='0',
+            side=self.side.get_side_type(),
+            total_quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair,
+                                                                             deal_stats.total_quote_amount *
+                                                                             self.contract_size)
         )
 
-    def close_deal(self, amount: float) -> ClosedDeal:
-        deal, pnl_percentage = self.close_deal_process(amount=amount)
+    async def close_deal(self, amount: float) -> ClosedDealMessage:
+        closed_deal = await self.close_deal_process(amount=amount)
 
-        return ClosedDeal(
+        return ClosedDealMessage(
+            title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
+            deal_id=closed_deal.deal.id,
             pair=self.pair,
-            quote_amount='Unknown',
-            safety_orders_count=deal.safety_order_count,
-            duration=StrategyHelper.get_time_duration_string(date_open=deal.date_open, date_close=datetime.now()),
-            profit=self.exchange.ccxt_exchange.decimal_to_precision(deal.pnl, TRUNCATE, 4),
-            profit_percentage=pnl_percentage,
-            price='0'
+            base_amount=0.1,  # TODO: remove magic number,
+            quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, closed_deal.quote_amount),
+            safety_orders_count=closed_deal.deal.safety_order_count,
+            duration=StrategyHelper.get_time_duration_string(date_open=closed_deal.deal.date_open,
+                                                             date_close=datetime.now()),
+            profit=self.exchange.ccxt_exchange.decimal_to_precision(closed_deal.deal.pnl, TRUNCATE, 4),
+            profit_percentage=closed_deal.pnl_percentage,
+            price='0',
+            side=self.side.get_side_type()
         )
-
-    def get_deal_in_db(self) -> Deal:
-        return get_deal(bot_id=self.bot_id, pair=self.pair)
-
-    def open_deal_in_db(self) -> Deal:
-        return create_deal(DealCreate(bot_id=self.bot_id, pair=self.pair, date_open=datetime.now()))
-
-    def close_deal_in_db(self, pnl: float) -> Deal:
-        return update_deal(bot_id=self.bot_id, pair=self.pair, obj_in=DealUpdate(
-            pnl=pnl, date_close=datetime.now()))
-
-    def average_deal_in_db(self):
-        return increment_safety_orders_count(
-            bot_id=self.bot_id, pair=self.pair)
 
     def ensure_deal_opened(self):
         self.side.ensure_deal_opened(pair=self.pair)
@@ -93,14 +106,32 @@ class BaseStrategy(metaclass=abc.ABCMeta):
     def get_opened_position(self):
         return self.side.get_opened_position(pair=self.pair)
 
-    def open_market_order(self, amount: float):
-        return self.side.open_market_order(pair=self.pair, amount=amount)
+    def open_market_order(self, amount: Decimal) -> Order:
+        order = self.side.open_market_order(pair=self.pair, amount=float(amount))
 
-    def average_market_order(self, amount: float):
-        return self.side.open_market_order(pair=self.pair, amount=amount)
+        return Order(
+            price=Decimal(order['average']),
+            volume=Decimal(order['amount']),
+            quote_amount=Decimal(self.get_quote_amount(order))
+        )
 
-    def close_market_order(self, amount: float):
-        return self.side.close_market_order(pair=self.pair, amount=amount)
+    def average_market_order(self, amount: Decimal) -> Order:
+        order = self.side.open_market_order(pair=self.pair, amount=float(amount))
+
+        return Order(
+            price=Decimal(order['average']),
+            volume=Decimal(order['amount']),
+            quote_amount=Decimal(self.get_quote_amount(order))
+        )
+
+    def close_market_order(self, amount: float) -> Order:
+        order = self.side.close_market_order(pair=self.pair, amount=amount)
+
+        return Order(
+            price=Decimal(order['average']),
+            volume=Decimal(order['amount']),
+            quote_amount=Decimal(self.get_quote_amount(order))
+        )
 
     def set_leverage(self, leverage: int):
         self.side.set_leverage(pair=self.pair, leverage=leverage)
@@ -108,9 +139,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
     # End helpers
 
     def get_quote_amount(self, order):
-        market = self.exchange.get_market(pair=self.pair)
+        return order['amount'] * float(self.contract_size) * order['average']
 
-        return order['amount'] * market['contractSize'] * order['average']
-
-    def get_base_amount(self, quote_amount: float) -> float:
-        return self.side.exchange.get_base_amount(pair=self.pair, quote_amount=quote_amount)
+    def get_base_amount(self, quote_amount: Decimal) -> Decimal:
+        # TODO: all types should be decimal
+        return Decimal(self.side.exchange.get_base_amount(pair=self.pair, quote_amount=quote_amount))
