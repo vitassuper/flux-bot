@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, String, DateTime
+from sqlalchemy import Boolean, String, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.app.models.base import Base
@@ -16,3 +16,4 @@ class Bot(Base):
     api_secret: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
+    copy_bot_id: Mapped[int] = mapped_column(Integer(), nullable=True)

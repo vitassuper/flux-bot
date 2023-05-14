@@ -1,4 +1,5 @@
 from src.app.repositories.bot import get_bot
+from src.app.services.bot import get_copy_bots
 from src.app.services.deal import is_deal_exist
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.binance import Binance
@@ -20,6 +21,15 @@ class Bot:
         self.type_of_signal = type_of_signal
         self.bot_id = bot_id
         self.pair = pair
+
+    async def get_copy_bots(self):
+        if self.bot_id in range(100, 300):
+            bot = await get_bot(bot_id=self.bot_id)
+
+            return await get_copy_bots(bot_id=bot.id)
+
+        return []
+
 
     async def process(self):
         self.exchange = await self.get_exchange()
