@@ -138,19 +138,27 @@ class Binance(BaseExchange):
         market = self.ccxt_exchange.market(pair)
         price = self.ccxt_exchange.fetch_ticker(pair)['last']
 
-        min_notional_filter = next(
-            filter(lambda x: x['filterType'] == 'MIN_NOTIONAL', market['info']['filters']))
+        min_notional_filter = next(filter(lambda x: x['filterType'] == 'MIN_NOTIONAL', market['info']['filters']))
 
         min_notional = float(min_notional_filter['notional'])
-        minimal_quote_amount = market['limits']['amount']['min'] * price
+        base_step = minimal_base_amount = market['limits']['amount']['min']
 
-        minimal_amount = max(minimal_quote_amount, min_notional)
+        while minimal_base_amount * price <= min_notional:
+            minimal_base_amount += base_step
 
-        if float(quote_amount) < minimal_amount:
+        minimal_quote_amount = minimal_base_amount * price
+
+        # TODO: refactor this, if value + 300% less than minimal throw exception
+        if minimal_quote_amount > quote_amount * 3:
             raise ConnectorException(
-                f'low amount for pair {pair} - min amount: {minimal_amount}')
+                f'low amount for pair {pair} - min amount: {minimal_quote_amount}')
 
-        return self.ccxt_exchange.amount_to_precision(pair, amount=float(quote_amount) / price)
+        amount = max(minimal_quote_amount, quote_amount)
+
+        # BADCODE to avoid min notional price
+        amount = amount * 1.05
+
+        return self.ccxt_exchange.amount_to_precision(pair, amount=float(amount) / price)
 
     def buy_long_position(self, pair: str, amount: float,
                           margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
