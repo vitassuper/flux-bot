@@ -156,9 +156,9 @@ class Binance(BaseExchange):
         amount = max(minimal_quote_amount, quote_amount)
 
         # BADCODE to avoid min notional price
-        amount = amount * 1.05
+        amount = float(amount) * 1.05
 
-        return self.ccxt_exchange.amount_to_precision(pair, amount=float(amount) / price)
+        return self.ccxt_exchange.amount_to_precision(pair, amount=amount / price)
 
     def buy_long_position(self, pair: str, amount: float,
                           margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
