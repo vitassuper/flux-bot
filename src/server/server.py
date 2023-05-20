@@ -7,7 +7,7 @@ from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
 from src.core.config import settings
 
 app = FastAPI(
-    title=settings.PROJECT_NAME, openapi_url=None
+    title=settings.SERVER_NAME, openapi_url=None
 )
 
 

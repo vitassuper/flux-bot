@@ -21,7 +21,6 @@ class Settings(BaseSettings):
             return v
         raise ValueError(v)
 
-    PROJECT_NAME: str
     DEBUG_MODE: bool
 
     POSTGRES_SERVER: str
