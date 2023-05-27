@@ -30,7 +30,6 @@ class Bot:
 
         return []
 
-
     async def process(self):
         self.exchange = await self.get_exchange()
         self.pair = self.guess_symbol_from_tv(symbol=self.pair)

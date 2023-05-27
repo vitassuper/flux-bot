@@ -3,6 +3,9 @@ import re
 from decimal import Decimal
 from typing import Union
 
+from ccxt import NetworkError
+
+from src.bot.exchange.decorators import retry_on_exception
 from src.bot.types.margin_type import MarginType
 
 
@@ -11,7 +14,7 @@ class BaseExchange(metaclass=abc.ABCMeta):
         self.bot_id = bot_id
         self.ccxt_exchange = exchange
 
-        self.ccxt_exchange.load_markets()
+        self.load_markets()
 
     # Abstract methods
     @abc.abstractmethod
@@ -95,6 +98,10 @@ class BaseExchange(metaclass=abc.ABCMeta):
 
     def get_market(self, pair: str):
         return self.ccxt_exchange.market(pair)
+
+    @retry_on_exception()
+    def load_markets(self):
+        self.ccxt_exchange.load_markets()
 
     # TODO: temp solution
     def guess_symbol_from_tv(self, symbol: str):
