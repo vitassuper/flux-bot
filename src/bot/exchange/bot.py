@@ -34,14 +34,7 @@ class Bot:
         self.exchange = await self.get_exchange()
         self.pair = self.guess_symbol_from_tv(symbol=self.pair)
 
-        if self.bot_id in range(100, 300):
-            bot = await get_bot(bot_id=self.bot_id)
-
-            if not bot.enabled:
-                if self.type_of_signal == 'open':
-                    raise ConnectorException('Bot disabled')
-                elif self.type_of_signal == 'add' and not await is_deal_exist(self.bot_id, self.pair):
-                    raise ConnectorException('Bot disabled')
+        await self.ensure_bot_enabled()
 
         self.margin_type = self.get_margin_type()
 
@@ -107,6 +100,18 @@ class Bot:
 
     def get_bot_name(self):
         return f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})'
+
+    async def ensure_bot_enabled(self):
+        if self.bot_id in range(100, 300):
+            bot = await get_bot(bot_id=self.bot_id)
+
+            if not bot.enabled:
+                if self.type_of_signal == 'open':
+                    raise ConnectorException('Bot disabled')
+                elif self.type_of_signal == 'add' and not await is_deal_exist(self.bot_id, self.pair):
+                    raise ConnectorException('Bot disabled')
+                elif self.type_of_signal == 'close' and not await is_deal_exist(self.bot_id, self.pair):
+                    raise ConnectorException('Bot disabled')
 
     # TODO: temp solution
     def guess_symbol_from_tv(self, symbol: str):

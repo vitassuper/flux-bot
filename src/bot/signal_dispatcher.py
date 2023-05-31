@@ -8,6 +8,7 @@ from src.app import schemas
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.bot import Bot
 from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
+from .exceptions.not_found_exception import NotFoundException
 from .singal_dispatcher_spawner import spawn_and_dispatch
 
 
@@ -50,8 +51,9 @@ class SignalDispatcher:
                 case _:
                     raise ConnectorException('unknown type of signal')
 
-        except ConnectorException as e:
+        except (ConnectorException, NotFoundException) as e:
             self.notifier.add_message_to_stack(
+                f'Bot id: {self.signal.bot_id}\n'
                 f'🚨Cant {self.signal.type_of_signal}: {str(e)}')
             traceback.print_tb(e.__traceback__)
 
