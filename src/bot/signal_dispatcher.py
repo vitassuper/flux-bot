@@ -10,6 +10,7 @@ from src.bot.exchange.bot import Bot
 from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
 from .exceptions.not_found_exception import NotFoundException
 from .singal_dispatcher_spawner import spawn_and_dispatch
+from src.app.services.deal import get_deal_by_id
 
 
 class SignalDispatcher:
@@ -41,13 +42,13 @@ class SignalDispatcher:
 
             match self.signal.type_of_signal:
                 case 'open':
-                    await self.handle_open_signal(amount=self.signal.amount)
+                    await self.handle_open_signal()
 
                 case 'add':
-                    await self.handle_average_signal(amount=self.signal.amount)
+                    await self.handle_average_signal()
 
                 case 'close':
-                    await self.handle_close_signal(amount=self.signal.amount)
+                    await self.handle_close_signal()
                 case _:
                     raise ConnectorException('unknown type of signal')
 
@@ -63,17 +64,18 @@ class SignalDispatcher:
         finally:
             await self.notifier.send_message()
 
-    async def handle_open_signal(self, amount: float):
-        opened_position_message = await self.strategy.open_deal(amount=amount)
+    async def handle_open_signal(self):
+        opened_position_message = await self.strategy.open_deal(amount=self.signal.amount)
 
         self.notifier.add_message_to_stack(str(opened_position_message))
 
-    async def handle_average_signal(self, amount: float):
-        averaged_position_message = await self.strategy.average_deal(amount=amount)
+    async def handle_average_signal(self):
+        averaged_position_message = await self.strategy.average_deal(amount=self.signal.amount)
 
         self.notifier.add_message_to_stack(str(averaged_position_message))
 
-    async def handle_close_signal(self, amount: float):
-        closed_position_message = await self.strategy.close_deal(amount=amount)
+    async def handle_close_signal(self):
+        deal = await get_deal_by_id(deal_id=self.signal.deal_id)
+        closed_position_message = await self.strategy.close_deal(amount=self.signal.amount, deal=deal)
 
         self.notifier.add_message_to_stack(str(closed_position_message))

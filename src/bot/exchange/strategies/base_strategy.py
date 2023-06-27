@@ -1,9 +1,11 @@
 import abc
 from datetime import datetime
 from decimal import Decimal
+from typing import Union
 
 from ccxt import TRUNCATE
 
+from src.app.models import Deal
 from src.bot.exchange.side.base_side import BaseSide
 from src.bot.exchange.strategy_db_helper import StrategyDBHelper
 from src.bot.exchange.strategy_helper import StrategyHelper
@@ -34,7 +36,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def close_deal_process(self, amount: float = None) -> ClosedDeal:
+    async def close_deal_process(self, amount: float = None, deal: Union[Deal, None] = None) -> ClosedDeal:
         pass
 
     @abc.abstractmethod
@@ -79,8 +81,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
                                                                              self.contract_size)
         )
 
-    async def close_deal(self, amount: float) -> ClosedDealMessage:
-        closed_deal = await self.close_deal_process(amount=amount)
+    async def close_deal(self, amount: float, deal: Union[Deal, None] = None) -> ClosedDealMessage:
+        closed_deal = await self.close_deal_process(amount=amount, deal=deal)
 
         return ClosedDealMessage(
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',

@@ -1,5 +1,7 @@
 from decimal import Decimal
+from typing import Union
 
+from src.app.models import Deal
 from src.bot.exchange.strategies.base_strategy import BaseStrategy
 from src.bot.objects.closed_deal import ClosedDeal
 
@@ -33,10 +35,11 @@ class GridStrategy(BaseStrategy):
 
         return safety_count, order.quote_amount
 
-    async def close_deal_process(self, amount: float = None) -> ClosedDeal:
+    async def close_deal_process(self, amount: float = None, deal: Union[Deal, None] = None) -> ClosedDeal:
         self.ensure_deal_opened()
 
-        deal = await self.db_helper.get_deal()
+        if not deal:
+            deal = await self.db_helper.get_deal()
 
         deal_stats = await self.db_helper.get_deal_stats(deal_id=deal.id)
 

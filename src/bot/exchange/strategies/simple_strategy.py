@@ -1,5 +1,7 @@
 from decimal import Decimal
+from typing import Union
 
+from src.app.models import Deal
 from src.bot.exchange.strategies.base_strategy import BaseStrategy
 from src.bot.objects.closed_deal import ClosedDeal
 
@@ -50,7 +52,7 @@ class SimpleStrategy(BaseStrategy):
 
         return safety_count, quote_amount
 
-    async def close_deal_process(self, amount: float = None) -> ClosedDeal:
+    async def close_deal_process(self, amount: float = None, deal: Union[Deal, None] = None) -> ClosedDeal:
         open_position = self.get_opened_position()
 
         order = self.close_market_order(open_position['contracts'])

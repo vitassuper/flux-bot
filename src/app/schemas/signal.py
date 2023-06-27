@@ -14,6 +14,7 @@ class CloseSignal(BaseModel):
     type_of_signal: Literal['close']
     pair: str
     amount: Optional[float]
+    deal_id: Optional[int]
 
 
 class AddSignal(BaseModel):
