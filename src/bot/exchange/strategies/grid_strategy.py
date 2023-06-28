@@ -20,14 +20,12 @@ class GridStrategy(BaseStrategy):
 
         return order.quote_amount, price
 
-    async def average_deal_process(self, base_amount: Decimal):
+    async def average_deal_process(self, deal: Deal, base_amount: Decimal):
         # Not necessary for current strategy
         # self.ensure_deal_opened()
 
         self.set_leverage(20)
         order = self.average_market_order(amount=base_amount)
-
-        deal = await self.db_helper.get_or_create_deal()
 
         await self.db_helper.create_average_order(deal_id=deal.id, price=order.price, volume=order.volume)
 
@@ -35,11 +33,8 @@ class GridStrategy(BaseStrategy):
 
         return safety_count, order.quote_amount
 
-    async def close_deal_process(self, amount: float = None, deal: Union[Deal, None] = None) -> ClosedDeal:
+    async def close_deal_process(self, deal: Deal, amount: float = None) -> ClosedDeal:
         self.ensure_deal_opened()
-
-        if not deal:
-            deal = await self.db_helper.get_deal()
 
         deal_stats = await self.db_helper.get_deal_stats(deal_id=deal.id)
 

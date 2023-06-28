@@ -17,18 +17,20 @@ from src.bot.objects.order import Order
 
 
 class BaseStrategy(metaclass=abc.ABCMeta):
-    def __init__(self, bot_id: int, side: BaseSide, pair: str) -> None:
+    def __init__(self, bot_id: int, side: BaseSide, pair: str, position: Union[int, None] = None) -> None:
         self.bot_id = bot_id
         self.side = side
         self.exchange = side.exchange
         self.pair = pair
+        self.position = position
 
         self.contract_size = Decimal(self.exchange.get_market(pair=pair)['contractSize'])
 
         self.strategy_helper = StrategyHelper(taker_fee=Decimal(self.exchange.ccxt_exchange.market(self.pair)['taker']),
                                               side=side.get_side_type(), contract_size=self.contract_size)
 
-        self.db_helper = StrategyDBHelper(side=side.get_side_type(), bot_id=self.bot_id, pair=self.pair)
+        self.db_helper = StrategyDBHelper(side=side.get_side_type(), bot_id=self.bot_id, pair=self.pair,
+                                          position=self.position)
 
     # Abstract methods
     @abc.abstractmethod
@@ -36,11 +38,11 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def close_deal_process(self, amount: float = None, deal: Union[Deal, None] = None) -> ClosedDeal:
+    async def close_deal_process(self, deal: Deal, amount: float = None) -> ClosedDeal:
         pass
 
     @abc.abstractmethod
-    async def average_deal_process(self, base_amount: Decimal):
+    async def average_deal_process(self, deal: Deal, base_amount: Decimal):
         pass
 
     # Helpers
@@ -60,9 +62,9 @@ class BaseStrategy(metaclass=abc.ABCMeta):
             side=self.side.get_side_type()
         )
 
-    async def average_deal(self, amount: float) -> AveragedDealMessage:
+    async def average_deal(self, amount: float, deal: Deal) -> AveragedDealMessage:
         base_amount = self.get_base_amount(quote_amount=Decimal(amount))
-        safety_count, quote_amount = await self.average_deal_process(base_amount=base_amount)
+        safety_count, quote_amount = await self.average_deal_process(deal=deal, base_amount=base_amount)
 
         deal = await self.db_helper.get_deal()
         deal_stats = await self.db_helper.get_deal_stats(deal_id=deal.id)
@@ -81,8 +83,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
                                                                              self.contract_size)
         )
 
-    async def close_deal(self, amount: float, deal: Union[Deal, None] = None) -> ClosedDealMessage:
-        closed_deal = await self.close_deal_process(amount=amount, deal=deal)
+    async def close_deal(self, amount: float, deal: Deal) -> ClosedDealMessage:
+        closed_deal = await self.close_deal_process(deal=deal, amount=amount)
 
         return ClosedDealMessage(
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',

@@ -10,7 +10,7 @@ from src.bot.exchange.bot import Bot
 from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
 from .exceptions.not_found_exception import NotFoundException
 from .singal_dispatcher_spawner import spawn_and_dispatch
-from src.app.services.deal import get_deal_by_id
+from src.app.services.deal import get_deal_by_id, get_deal
 
 
 class SignalDispatcher:
@@ -25,10 +25,12 @@ class SignalDispatcher:
     async def dispatch(self):
         try:
             self.notifier.add_message_to_stack(
+                f'Position: {self.signal.position}\n'
                 f'Received <b>{self.signal.type_of_signal}</b> signal: pair: {self.signal.pair}' + (
                     f' amount: {self.signal.amount}' if hasattr(self.signal, 'amount') else ''))
 
-            bot = Bot(bot_id=self.signal.bot_id, pair=self.signal.pair, type_of_signal=self.signal.type_of_signal)
+            bot = Bot(bot_id=self.signal.bot_id, pair=self.signal.pair, type_of_signal=self.signal.type_of_signal,
+                      position=self.signal.position)
 
             for copy_bot in await bot.get_copy_bots():
                 copy_signal = deepcopy(self.signal)
@@ -70,12 +72,21 @@ class SignalDispatcher:
         self.notifier.add_message_to_stack(str(opened_position_message))
 
     async def handle_average_signal(self):
-        averaged_position_message = await self.strategy.average_deal(amount=self.signal.amount)
+        ### get_or_create_deal
+
+        deal = await self.get_deal_from_signal()
+        averaged_position_message = await self.strategy.average_deal(amount=self.signal.amount, deal=deal)
 
         self.notifier.add_message_to_stack(str(averaged_position_message))
 
     async def handle_close_signal(self):
-        deal = await get_deal_by_id(deal_id=self.signal.deal_id)
+        deal = await self.get_deal_from_signal()
         closed_position_message = await self.strategy.close_deal(amount=self.signal.amount, deal=deal)
 
         self.notifier.add_message_to_stack(str(closed_position_message))
+
+    async def get_deal_from_signal(self):
+        if self.signal.deal_id:
+            return await get_deal_by_id(deal_id=self.signal.deal_id)
+        else:
+            return await get_deal(bot_id=self.signal.bot_id, pair=self.strategy.pair, position=self.signal.position)

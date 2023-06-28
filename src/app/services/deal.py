@@ -1,21 +1,21 @@
 from datetime import datetime
-from typing import List
+from typing import List, Union
 
 from src.app.models import Deal
 from src.app.repositories import deal as repository
 from src.bot.exceptions.not_found_exception import NotFoundException
 
 
-async def create_deal(bot_id: int, pair: str, date_open: datetime) -> Deal:
-    return await repository.create_deal(bot_id=bot_id, pair=pair, date_open=date_open)
+async def create_deal(bot_id: int, pair: str, date_open: datetime, position: Union[int, None] = None) -> Deal:
+    return await repository.create_deal(bot_id=bot_id, pair=pair, date_open=date_open, position=position)
 
 
 async def increment_safety_orders_count(deal_id: int) -> int:
     return await repository.increment_safety_orders_count(deal_id=deal_id)
 
 
-async def get_deal(bot_id: int, pair: str) -> Deal:
-    deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair)
+async def get_deal(bot_id: int, pair: str, position: Union[int, None] = None) -> Deal:
+    deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair, position=position)
 
     if not deal:
         raise NotFoundException(

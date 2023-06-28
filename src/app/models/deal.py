@@ -19,4 +19,5 @@ class Deal(Base):
     date_close: Mapped[datetime] = mapped_column(DateTime(), nullable=True, default=None)
     pnl: Mapped[decimal] = mapped_column(Numeric(), nullable=True)
     bot_id: Mapped[int] = mapped_column(Integer(), nullable=False)
+    position: Mapped[int] = mapped_column(Integer(), nullable=True)
     order: Mapped[List["Order"]] = relationship(cascade="all, delete", passive_deletes=True)

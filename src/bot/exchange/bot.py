@@ -1,3 +1,5 @@
+from typing import Union
+
 from src.app.repositories.bot import get_bot
 from src.app.services.bot import get_copy_bots
 from src.app.services.deal import is_deal_exist
@@ -15,12 +17,13 @@ from src.bot.utils.helper import Helper
 
 
 class Bot:
-    def __init__(self, bot_id: int, pair: str, type_of_signal: str) -> None:
+    def __init__(self, bot_id: int, pair: str, type_of_signal: str, position: Union[int, None] = None) -> None:
         self.margin_type = None
         self.exchange = None
         self.type_of_signal = type_of_signal
         self.bot_id = bot_id
         self.pair = pair
+        self.position = position
 
     async def get_copy_bots(self):
         if self.bot_id in range(100, 300):
@@ -96,7 +99,7 @@ class Bot:
         if self.bot_id == 3 or self.bot_id == 1 or self.bot_id == 2:
             return SimpleStrategy(bot_id=self.bot_id, side=side, pair=self.pair)
 
-        return GridStrategy(bot_id=self.bot_id, side=side, pair=self.pair)
+        return GridStrategy(bot_id=self.bot_id, side=side, pair=self.pair, position=self.position)
 
     def get_bot_name(self):
         return f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})'

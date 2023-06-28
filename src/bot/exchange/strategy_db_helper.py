@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, Union
 
 from src.app.models import Order, Deal
 from src.app.services.deal import update_deal, get_deal, create_deal, increment_safety_orders_count, get_or_create_deal
@@ -11,10 +11,11 @@ from src.bot.types.side_type import SideType
 
 
 class StrategyDBHelper:
-    def __init__(self, side: SideType, bot_id: int, pair: str):
+    def __init__(self, side: SideType, bot_id: int, pair: str, position: Union[int, None] = None):
         self.side = side
         self.bot_id = bot_id
         self.pair = pair
+        self.position = position
 
     def get_order_side(self, action: Literal['open', 'close']) -> OrderSideType:
         mapping = {
@@ -45,7 +46,7 @@ class StrategyDBHelper:
         return await get_or_create_deal(bot_id=self.bot_id, pair=self.pair)
 
     async def open_deal(self) -> Deal:
-        return await create_deal(bot_id=self.bot_id, pair=self.pair, date_open=datetime.now())
+        return await create_deal(bot_id=self.bot_id, pair=self.pair, date_open=datetime.now(), position=self.position)
 
     async def get_deal_stats(self, deal_id: int) -> DealStats:
         return await get_deal_stats(deal_id=deal_id)

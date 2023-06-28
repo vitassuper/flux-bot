@@ -1,6 +1,6 @@
 import decimal
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 from sqlalchemy import select, and_, func
 
@@ -8,13 +8,13 @@ from src.app.models.deal import Deal
 from src.db.session import get_async_session
 
 
-async def create_deal(bot_id: int, pair: str, date_open: datetime, pnl: Optional[decimal] = None):
+async def create_deal(bot_id: int, pair: str, date_open: datetime, position: Union[int, None] = None):
     async with get_async_session() as session:
         deal = Deal(
             bot_id=bot_id,
             pair=pair,
             date_open=date_open,
-            pnl=pnl
+            position=position
         )
         session.add(deal)
         await session.commit()
@@ -35,13 +35,17 @@ async def update_deal(deal_id: int, **update_values) -> Deal:
         return deal
 
 
-async def get_bot_last_deal(bot_id: int, pair: str) -> Deal:
+async def get_bot_last_deal(bot_id: int, pair: str, position: Union[int, None] = None) -> Deal:
     async with get_async_session() as session:
         query = select(Deal).where(and_(Deal.bot_id == bot_id, Deal.pair == pair, Deal.date_close.is_(None))).order_by(
             Deal.id.desc())
-        deals = await session.execute(query)
 
-        return deals.scalar()
+        if position is not None:
+            query = query.where(Deal.position == position)
+
+        result = await session.execute(query)
+
+        return result.scalar()
 
 
 async def get_deal_by_id(deal_id: int) -> Deal:
