@@ -1,120 +1,78 @@
 from typing import Union
 
-from src.app.repositories.bot import get_bot
-from src.app.services.bot import get_copy_bots
-from src.app.services.deal import is_deal_exist
+from src.app.schemas import AddSignal, OpenSignal, CloseSignal
 from src.bot.exceptions.connector_exception import ConnectorException
-from src.bot.exchange.binance import Binance
-from src.bot.exchange.okx import Okex
+from src.bot.exchange.exchange_manager import ExchangeManager
 from src.bot.exchange.side.base_side import BaseSide
 from src.bot.exchange.side.long_side import LongSide
 from src.bot.exchange.side.short_side import ShortSide
 from src.bot.exchange.strategies.grid_strategy import GridStrategy
-from src.bot.exchange.strategies.simple_strategy import SimpleStrategy
+from src.bot.models import Bot as BotModel
+from src.bot.repositories.bot import get_bot
+from src.bot.services import get_exchange
+from src.bot.services.deal import get_deal_by_id, get_deal
+from src.bot.types.bot_side_type import BotSideType
 from src.bot.types.margin_type import MarginType
-
-from src.bot.utils.helper import Helper
 
 
 class Bot:
-    def __init__(self, bot_id: int, pair: str, type_of_signal: str, position: Union[int, None] = None) -> None:
+    def __init__(self, bot: BotModel, signal: Union[AddSignal, OpenSignal, CloseSignal]) -> None:
         self.margin_type = None
         self.exchange = None
-        self.type_of_signal = type_of_signal
-        self.bot_id = bot_id
-        self.pair = pair
-        self.position = position
-
-    async def get_copy_bots(self):
-        if self.bot_id in range(100, 300):
-            bot = await get_bot(bot_id=self.bot_id)
-
-            return await get_copy_bots(bot_id=bot.id)
-
-        return []
+        self.signal = signal
+        self.bot = bot
+        self.pair = signal.pair
+        self.position = signal.position
+        self.deal = None
 
     async def process(self):
-        self.exchange = await self.get_exchange()
+        bot = await get_bot(self.signal.bot_id)
+
+        self.exchange = await self.get_exchange(bot.exchange_id)
         self.pair = self.guess_symbol_from_tv(symbol=self.pair)
 
-        await self.ensure_bot_enabled()
+        await self.ensure_bot_enabled(bot=bot)
 
-        self.margin_type = self.get_margin_type()
+        self.margin_type = MarginType.cross
 
-        return self.get_strategy(self.get_side())
+        return await self.get_strategy(self.get_side())
 
-    async def get_exchange_credentials(self):
-        bot = await get_bot(bot_id=self.bot_id)
-
-        api_key = Helper.decrypt_string(bot.api_key)
-        api_secret = Helper.decrypt_string(bot.api_secret)
-
-        return api_key, api_secret
-
-    async def get_exchange(self):
-        if self.bot_id in range(10, 20):
-            return Okex(self.bot_id)
-
-        if self.bot_id in range(100, 200):
-            key, secret = await self.get_exchange_credentials()
-
-            return Binance(self.bot_id, key, secret, False)
-
-        if self.bot_id in range(200, 300):
-            key, secret = await self.get_exchange_credentials()
-
-            return Binance(self.bot_id, key, secret, True)
-
-        raise ConnectorException('Unknown bot id')
-
-    # TODO: remove it later
-    def get_margin_type(self):
-        if self.bot_id == 1 or self.bot_id == 3:
-            return MarginType.isolated
-
-        return MarginType.cross
+    async def get_exchange(self, exchange_id: int):
+        exchange_manager = ExchangeManager(await get_exchange(exchange_id=exchange_id))
+        return exchange_manager.get_exchange()
 
     def get_side(self) -> BaseSide:
-        if self.bot_id in range(15, 20) or self.bot_id == 3:
-            return LongSide(
-                exchange=self.exchange, margin_type=self.margin_type)
-
-        if self.bot_id in range(100, 150):
+        if self.bot.side == BotSideType.short:
             return ShortSide(exchange=self.exchange, margin_type=self.margin_type)
 
-        if self.bot_id in range(150, 200):
-            return LongSide(
-                exchange=self.exchange, margin_type=self.margin_type)
+        return LongSide(exchange=self.exchange, margin_type=self.margin_type)
 
-        if self.bot_id in range(200, 250):
-            return ShortSide(exchange=self.exchange, margin_type=self.margin_type)
-
-        if self.bot_id in range(250, 300):
-            return LongSide(
-                exchange=self.exchange, margin_type=self.margin_type)
-
-        return ShortSide(exchange=self.exchange, margin_type=self.margin_type)
-
-    def get_strategy(self, side: BaseSide):
-        if self.bot_id == 3 or self.bot_id == 1 or self.bot_id == 2:
-            return SimpleStrategy(bot_id=self.bot_id, side=side, pair=self.pair)
-
-        return GridStrategy(bot_id=self.bot_id, side=side, pair=self.pair, position=self.position)
+    async def get_strategy(self, side: BaseSide):
+        return GridStrategy(bot_id=self.bot.id, side=side, pair=self.pair, position=self.position,
+                            deal=await self.get_active_deal())
 
     def get_bot_name(self):
-        return f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})'
+        return f'Bot id: {self.bot.id} ({self.exchange.get_exchange_name()})'
 
-    async def ensure_bot_enabled(self):
-        if self.bot_id in range(100, 300):
-            bot = await get_bot(bot_id=self.bot_id)
+    async def get_active_deal(self):
+        if self.signal.type_of_signal == 'open':
+            return None
 
-            if not bot.enabled:
-                if self.type_of_signal == 'open':
-                    raise ConnectorException('Bot disabled')
-                elif self.type_of_signal == 'add' and not await is_deal_exist(self.bot_id, self.pair):
-                    raise ConnectorException('Bot disabled')
-                elif self.type_of_signal == 'close' and not await is_deal_exist(self.bot_id, self.pair):
-                    raise ConnectorException('Bot disabled')
+        if self.signal.deal_id:
+            return await get_deal_by_id(deal_id=self.signal.deal_id)
+        else:
+            return await get_deal(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
+
+    async def ensure_bot_enabled(self, bot: BotModel):
+        deal = await self.get_active_deal()
+
+        if not bot.enabled:
+            if self.signal.type_of_signal == 'open':
+                raise ConnectorException('Bot disabled')
+            elif self.signal.type_of_signal == 'add' and not deal:
+                raise ConnectorException('Bot disabled')
+            elif self.signal.type_of_signal == 'close' and not deal:
+                raise ConnectorException('Bot disabled')
 
     # TODO: temp solution
     def guess_symbol_from_tv(self, symbol: str):

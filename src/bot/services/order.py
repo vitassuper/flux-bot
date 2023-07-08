@@ -1,8 +1,8 @@
 from decimal import Decimal
 from typing import List
 
-from src.app.models.order import Order
-from src.app.repositories import order as repository
+from src.bot.models.order import Order
+from src.bot.repositories import order as repository
 from src.bot.exceptions.not_found_exception import NotFoundException
 from src.bot.objects.deal_stats import DealStats
 from src.bot.utils.helper import Helper

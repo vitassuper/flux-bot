@@ -8,6 +8,7 @@ from src.bot.exchange.base import BaseExchange
 from src.bot.types.margin_type import MarginType
 from src.bot.types.side_type import SideType
 from src.core.config import settings
+from src.bot.models import Exchange
 
 
 class Okex(BaseExchange):
@@ -15,10 +16,10 @@ class Okex(BaseExchange):
     def get_exchange_name(self):
         return 'OKEX'
 
-    def __init__(self, bot_id: int) -> None:
+    def __init__(self, exchange: Exchange) -> None:
         exchange: ccxt.okex = ccxt.okex({
-            'apiKey': settings.API_KEY,
-            'secret': settings.API_SECRET,
+            'apiKey': exchange.get_api_key(),
+            'secret': exchange.get_api_secret(),
             'password': settings.API_PASSWORD,
             'options': {
                 'defaultType': 'swap',
@@ -26,7 +27,7 @@ class Okex(BaseExchange):
             'enableRateLimit': True
         })
 
-        super().__init__(bot_id=bot_id, exchange=exchange)
+        super().__init__(exchange=exchange)
 
     def get_opened_long_position(self, pair: str):
         positions = self.ccxt_exchange.fetch_positions()

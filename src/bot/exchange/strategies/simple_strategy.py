@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Union
 
-from src.app.models import Deal
+from src.bot.models import Deal
 from src.bot.exchange.strategies.base_strategy import BaseStrategy
 from src.bot.objects.closed_deal import ClosedDeal
 

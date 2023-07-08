@@ -2,7 +2,7 @@ import decimal
 
 from sqlalchemy import select, func
 
-from src.app.models.order import Order
+from src.bot.models.order import Order
 from src.db.session import get_async_session
 
 

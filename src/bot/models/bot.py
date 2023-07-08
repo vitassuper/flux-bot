@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, String, DateTime, Integer
+from sqlalchemy import Boolean, String, DateTime, Integer, SmallInteger
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.app.models.base import Base
+from src.bot.models.base import Base
+from src.bot.types.bot_side_type import BotSideType
 
 
 class Bot(Base):
@@ -17,3 +18,5 @@ class Bot(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
     copy_bot_id: Mapped[int] = mapped_column(Integer(), nullable=True)
+    exchange_id: Mapped[int] = mapped_column(Integer(), nullable=True)
+    side: Mapped[BotSideType] = mapped_column(SmallInteger(), nullable=True)

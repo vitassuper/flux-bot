@@ -1,8 +1,8 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Union
 
-from src.app.models.deal import Deal
+from src.bot.models import Deal
 from src.bot.exchange.strategy_helper import StrategyHelper
 from src.bot.types.side_type import SideType
 

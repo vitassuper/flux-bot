@@ -1,7 +1,5 @@
-from datetime import datetime
 import ccxt
-from src.app.schemas.deals import DealCreate, DealUpdate
-from src.app.services.deal import create_deal, get_deal, get_orders, update_deal
+from src.bot.services import get_deal, get_orders
 from src.bot.exception import ConnectorException
 from src.bot.exchange.spot_base import SpotBaseExchange
 from src.core.config import settings
@@ -48,7 +46,7 @@ class BinanceSpot(SpotBaseExchange):
                 f'low amount for pair {pair} - min amount: {minimal_amount}')
 
         return self.exchange.amount_to_precision(pair, amount=quote_amount / price)
-    
+
     def test(self, pair: str, amount: float):
         pair = self.guess_symbol_from_tv(symbol=pair)
 
@@ -69,7 +67,7 @@ class BinanceSpot(SpotBaseExchange):
 
         # create_deal(DealCreate(bot_id=self.bot_id, avg_price=avg_price,
         #             pair=order['symbol'], date_open=datetime.now()))
-        
+
 
 
 

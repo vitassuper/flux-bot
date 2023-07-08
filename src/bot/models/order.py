@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey, String, Numeric, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.app.models.base import Base
+from src.bot.models.base import Base
 
 
 class Order(Base):

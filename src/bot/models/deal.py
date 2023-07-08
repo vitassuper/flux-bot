@@ -5,8 +5,8 @@ from typing import List
 from sqlalchemy import String, SmallInteger, DateTime, Numeric, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.app.models.base import Base
-from src.app.models.order import Order
+from src.bot.models.base import Base
+from src.bot.models.order import Order
 
 
 class Deal(Base):

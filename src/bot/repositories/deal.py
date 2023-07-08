@@ -1,10 +1,9 @@
-import decimal
 from datetime import datetime
-from typing import Optional, Union
+from typing import Union
 
 from sqlalchemy import select, and_, func
 
-from src.app.models.deal import Deal
+from src.bot.models import Deal
 from src.db.session import get_async_session
 
 

@@ -6,6 +6,7 @@ import ccxt
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.base import BaseExchange
 from src.bot.exchange.decorators import retry_on_exception
+from src.bot.models import Exchange
 from src.bot.types.margin_type import MarginType
 from src.bot.types.side_type import SideType
 
@@ -15,10 +16,12 @@ class Binance(BaseExchange):
     def get_exchange_name(self):
         return 'Binance'
 
-    def __init__(self, bot_id: int, api_key: str, api_secret: str, hedge_mode: bool) -> None:
+    def __init__(self, exchange: Exchange) -> None:
+        hedge_mode = exchange.hedge
+
         exchange = ccxt.binance({
-            'apiKey': api_key,
-            'secret': api_secret,
+            'apiKey': exchange.get_api_key(),
+            'secret': exchange.get_api_secret(),
             'options': {
                 'defaultType': 'future',
                 'hedgeMode': hedge_mode
@@ -28,7 +31,7 @@ class Binance(BaseExchange):
 
         self.hedge_mode = hedge_mode
 
-        super().__init__(bot_id=bot_id, exchange=exchange)
+        super().__init__(exchange=exchange)
 
     def ensure_long_position_not_opened(self, pair: str):
         positions = self.ccxt_exchange.fetch_positions_risk([pair])

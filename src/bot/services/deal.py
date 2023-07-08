@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import List, Union
 
-from src.app.models import Deal
-from src.app.repositories import deal as repository
+from src.bot.models import Deal
+from src.bot.repositories import deal as repository
 from src.bot.exceptions.not_found_exception import NotFoundException
 
 

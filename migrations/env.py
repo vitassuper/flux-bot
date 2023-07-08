@@ -7,7 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.app.models.base import Base
+from src.bot.models.base import Base
 from src.core.config import settings
 
 config = context.config

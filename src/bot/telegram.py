@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Union
 
 from telegram import ReplyKeyboardMarkup, Update, KeyboardButton
 from telegram.ext import (
@@ -10,7 +10,7 @@ from telegram.ext import (
 )
 from telegram.ext._utils.types import HandlerCallback
 
-from src.app.services.deal import get_daily_pnl, get_total_pnl
+from src.bot.services.deal import get_daily_pnl, get_total_pnl
 from src.bot.exchange.async_exchange.async_base import BaseExchange
 from src.bot.exchange.async_exchange.async_binance import Binance
 from src.bot.exchange.async_exchange.async_okx import Okex

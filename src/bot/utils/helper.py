@@ -4,8 +4,8 @@ from typing import List
 
 from cryptography.fernet import Fernet
 
-from src.app.models import Order
-from src.bot.exceptions.connector_exception import ConnectorException
+from src.bot.models import Order
+from src.bot.exceptions import ConnectorException
 from src.core.config import settings
 
 

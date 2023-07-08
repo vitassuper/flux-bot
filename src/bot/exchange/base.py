@@ -3,15 +3,12 @@ import re
 from decimal import Decimal
 from typing import Union
 
-from ccxt import NetworkError
-
 from src.bot.exchange.decorators import retry_on_exception
 from src.bot.types.margin_type import MarginType
 
 
 class BaseExchange(metaclass=abc.ABCMeta):
-    def __init__(self, bot_id: int, exchange) -> None:
-        self.bot_id = bot_id
+    def __init__(self, exchange) -> None:
         self.ccxt_exchange = exchange
 
         self.load_markets()

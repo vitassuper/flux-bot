@@ -5,7 +5,7 @@ from typing import Union
 
 from ccxt import TRUNCATE
 
-from src.app.models import Deal
+from src.bot.models import Deal
 from src.bot.exchange.side.base_side import BaseSide
 from src.bot.exchange.strategy_db_helper import StrategyDBHelper
 from src.bot.exchange.strategy_helper import StrategyHelper
@@ -17,12 +17,14 @@ from src.bot.objects.order import Order
 
 
 class BaseStrategy(metaclass=abc.ABCMeta):
-    def __init__(self, bot_id: int, side: BaseSide, pair: str, position: Union[int, None] = None) -> None:
+    def __init__(self, bot_id: int, side: BaseSide, pair: str, position: Union[int, None] = None,
+                 deal: Deal = None) -> None:
         self.bot_id = bot_id
         self.side = side
         self.exchange = side.exchange
         self.pair = pair
         self.position = position
+        self.active_deal_model = deal
 
         self.contract_size = Decimal(self.exchange.get_market(pair=pair)['contractSize'])
 
@@ -38,11 +40,11 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def close_deal_process(self, deal: Deal, amount: float = None) -> ClosedDeal:
+    async def close_deal_process(self, amount: float = None) -> ClosedDeal:
         pass
 
     @abc.abstractmethod
-    async def average_deal_process(self, deal: Deal, base_amount: Decimal):
+    async def average_deal_process(self, base_amount: Decimal):
         pass
 
     # Helpers
@@ -62,9 +64,9 @@ class BaseStrategy(metaclass=abc.ABCMeta):
             side=self.side.get_side_type()
         )
 
-    async def average_deal(self, amount: float, deal: Deal) -> AveragedDealMessage:
+    async def average_deal(self, amount: float, ) -> AveragedDealMessage:
         base_amount = self.get_base_amount(quote_amount=Decimal(amount))
-        safety_count, quote_amount = await self.average_deal_process(deal=deal, base_amount=base_amount)
+        safety_count, quote_amount = await self.average_deal_process(base_amount=base_amount)
 
         deal = await self.db_helper.get_deal()
         deal_stats = await self.db_helper.get_deal_stats(deal_id=deal.id)
@@ -83,8 +85,8 @@ class BaseStrategy(metaclass=abc.ABCMeta):
                                                                              self.contract_size)
         )
 
-    async def close_deal(self, amount: float, deal: Deal) -> ClosedDealMessage:
-        closed_deal = await self.close_deal_process(deal=deal, amount=amount)
+    async def close_deal(self, amount: float) -> ClosedDealMessage:
+        closed_deal = await self.close_deal_process(amount=amount)
 
         return ClosedDealMessage(
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',

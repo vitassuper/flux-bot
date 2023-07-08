@@ -3,7 +3,7 @@ from typing import List
 
 from ccxt.base.decimal_to_precision import TRUNCATE
 
-from src.app.services.deal import get_opened_deals
+from src.bot.services.deal import get_opened_deals
 from src.bot.objects.messages.active_deal_message import ActiveDealMessage
 
 

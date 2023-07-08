@@ -1,7 +1,7 @@
 from typing import List
 
-from src.app.models import Bot
-from src.app.repositories import bot as repository
+from src.bot.models import Bot
+from src.bot.repositories import bot as repository
 from src.bot.exceptions.not_found_exception import NotFoundException
 
 

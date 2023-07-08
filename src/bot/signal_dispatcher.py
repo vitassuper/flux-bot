@@ -4,20 +4,17 @@ from typing import Union
 
 import ccxt
 
-from src.app import schemas
+from src.app.schemas import AddSignal, OpenSignal, CloseSignal
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.bot import Bot
 from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
-from .exceptions.not_found_exception import NotFoundException
-from .singal_dispatcher_spawner import spawn_and_dispatch
-from src.app.services.deal import get_deal_by_id, get_deal
+from src.bot.exceptions import NotFoundException
+from src.bot.singal_dispatcher_spawner import spawn_and_dispatch
+from src.bot.services import get_deal_by_id, get_deal, get_bot, get_copy_bots
 
 
 class SignalDispatcher:
-    def __init__(
-        self,
-        signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal]
-    ):
+    def __init__(self, signal: Union[AddSignal, OpenSignal, CloseSignal]):
         self.notifier = TelegramNotifier()
         self.signal = signal
         self.strategy = None
@@ -29,10 +26,11 @@ class SignalDispatcher:
                 f'Received <b>{self.signal.type_of_signal}</b> signal: pair: {self.signal.pair}' + (
                     f' amount: {self.signal.amount}' if hasattr(self.signal, 'amount') else ''))
 
-            bot = Bot(bot_id=self.signal.bot_id, pair=self.signal.pair, type_of_signal=self.signal.type_of_signal,
-                      position=self.signal.position)
+            bot_model = await get_bot(self.signal.bot_id)
 
-            for copy_bot in await bot.get_copy_bots():
+            bot = Bot(bot=bot_model, signal=self.signal)
+
+            for copy_bot in await get_copy_bots(bot_model.id):
                 copy_signal = deepcopy(self.signal)
                 copy_signal.bot_id = copy_bot.id
 
@@ -73,15 +71,12 @@ class SignalDispatcher:
 
     async def handle_average_signal(self):
         ### get_or_create_deal
-
-        deal = await self.get_deal_from_signal()
-        averaged_position_message = await self.strategy.average_deal(amount=self.signal.amount, deal=deal)
+        averaged_position_message = await self.strategy.average_deal(amount=self.signal.amount)
 
         self.notifier.add_message_to_stack(str(averaged_position_message))
 
     async def handle_close_signal(self):
-        deal = await self.get_deal_from_signal()
-        closed_position_message = await self.strategy.close_deal(amount=self.signal.amount, deal=deal)
+        closed_position_message = await self.strategy.close_deal(amount=self.signal.amount)
 
         self.notifier.add_message_to_stack(str(closed_position_message))
 
