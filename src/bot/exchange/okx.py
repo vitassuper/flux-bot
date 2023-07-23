@@ -29,6 +29,14 @@ class Okex(BaseExchange):
 
         super().__init__(exchange=exchange)
 
+    def get_current_leverage(self, pair: str, side: Union[SideType.long, SideType.short] = SideType.short,
+                             margin_type: Union[MarginType.cross, MarginType.isolated] = MarginType.isolated):
+        leverage_info = next(
+            (l for l in self.ccxt_exchange.fetch_leverage(pair, {'mgnMode': margin_type.value})['data'] if
+             l['posSide'] == side), None)
+
+        return int(leverage_info['lever'])
+
     def get_opened_long_position(self, pair: str):
         positions = self.ccxt_exchange.fetch_positions()
 
@@ -116,11 +124,14 @@ class Okex(BaseExchange):
         if margin_type == MarginType.isolated:
             params['posSide'] = side.value
 
-        self.ccxt_exchange.set_leverage(
-            leverage=leverage,
-            symbol=pair,
-            params=params,
-        )
+        current_leverage = self.get_current_leverage(pair=pair, side=side, margin_type=margin_type)
+
+        if current_leverage != leverage:
+            self.ccxt_exchange.set_leverage(
+                leverage=leverage,
+                symbol=pair,
+                params=params,
+            )
 
     def set_leverage_for_short_position(self, pair: str, leverage: int,
                                         margin_type: Union[
