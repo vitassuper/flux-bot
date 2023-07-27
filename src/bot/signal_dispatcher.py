@@ -32,6 +32,7 @@ class SignalDispatcher:
 
             for copy_bot in await get_copy_bots(bot_model.id):
                 copy_signal = deepcopy(self.signal)
+                #TODO: fix bug related to copy signal where provided deal_id because 2 different bots cant have the same deal
                 copy_signal.bot_id = copy_bot.id
 
                 spawn_and_dispatch(copy_signal)
