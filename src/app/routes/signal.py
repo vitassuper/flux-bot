@@ -1,6 +1,6 @@
-from fastapi import APIRouter
+from sanic import Blueprint
 
 from src.app.controllers import signal
 
-api_router = APIRouter()
-api_router.include_router(signal.router, prefix='/signal', tags=['signal'])
+router = Blueprint(name='signal')
+router.add_route(signal.handler, '/api/v1/signal', ['POST'])
