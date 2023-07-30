@@ -1,7 +1,8 @@
+import json
 import re
 from typing import Union
 
-from sanic import HTTPResponse, Request, response, exceptions
+from sanic import HTTPResponse, Request, response, exceptions, SanicException
 
 from src.app.schemas import OpenSignal, CloseSignal, AddSignal
 from src.bot.singal_dispatcher_spawner import spawn_and_dispatch
@@ -36,10 +37,23 @@ def remove_letters_and_convert_to_number(s):
     return int(first_letter_removed)
 
 
+def parse_json(raw_body: bytes):
+    raw_body = raw_body.decode('utf-8')
+
+    try:
+        return json.loads(raw_body)
+
+    except json.JSONDecodeError as e:
+        error_pos = e.pos
+        error_location = max(0, error_pos - 20)
+
+        raise SanicException(f"...{raw_body[error_location:error_pos + 20]}...", status_code=500)
+
+
 async def handler(
     request: Request
 ) -> HTTPResponse:
-    body = request.json
+    body = parse_json(request.body)
 
     if body.get('connector_secret') != settings.CONNECTOR_SECRET:
         raise exceptions.Forbidden()
