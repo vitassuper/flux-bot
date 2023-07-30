@@ -1,3 +1,4 @@
+import re
 from typing import Union
 
 from sanic import HTTPResponse, Request, response, exceptions
@@ -22,6 +23,19 @@ def initialize_signal_object(data: dict) -> Union[AddSignal, OpenSignal, CloseSi
     raise ValueError("Invalid discriminator value")
 
 
+# TODO temp function
+def remove_letters_and_convert_to_number(s):
+    if s is None:
+        return None
+
+    if isinstance(s, int):
+        return s
+
+    first_letter_removed = re.sub(r'[a-zA-Z]', '', s, 1)
+
+    return int(first_letter_removed)
+
+
 async def handler(
     request: Request
 ) -> HTTPResponse:
@@ -30,6 +44,9 @@ async def handler(
     if body.get('connector_secret') != settings.CONNECTOR_SECRET:
         raise exceptions.Forbidden()
 
-    spawn_and_dispatch(initialize_signal_object(body))
+    signal = initialize_signal_object(body)
+    signal.position = remove_letters_and_convert_to_number(signal.position)
+
+    spawn_and_dispatch(signal)
 
     return response.empty()
