@@ -68,13 +68,12 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         base_amount = self.get_base_amount(quote_amount=Decimal(amount))
         safety_count, quote_amount = await self.average_deal_process(base_amount=base_amount)
 
-        deal = await self.db_helper.get_deal()
-        deal_stats = await self.db_helper.get_deal_stats(deal_id=deal.id)
+        deal_stats = await self.db_helper.get_deal_stats(deal_id=self.active_deal_model.id)
 
         return AveragedDealMessage(
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
             base_amount=0.1,  # TODO: remove magic number,
-            deal_id=deal.id,
+            deal_id=self.active_deal_model.id,
             pair=self.pair,
             quote_amount=self.exchange.ccxt_exchange.cost_to_precision(self.pair, quote_amount),
             safety_orders_count=safety_count,

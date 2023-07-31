@@ -5,12 +5,12 @@ from typing import Union
 import ccxt
 
 from src.app.schemas import AddSignal, OpenSignal, CloseSignal
+from src.bot.exceptions import NotFoundException
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.bot import Bot
 from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
-from src.bot.exceptions import NotFoundException
+from src.bot.services import get_bot, get_copy_bots
 from src.bot.singal_dispatcher_spawner import spawn_and_dispatch
-from src.bot.services import get_deal_by_id, get_deal, get_bot, get_copy_bots
 
 
 class SignalDispatcher:
@@ -80,9 +80,3 @@ class SignalDispatcher:
         closed_position_message = await self.strategy.close_deal(amount=self.signal.amount)
 
         self.notifier.add_message_to_stack(str(closed_position_message))
-
-    async def get_deal_from_signal(self):
-        if self.signal.deal_id:
-            return await get_deal_by_id(deal_id=self.signal.deal_id)
-        else:
-            return await get_deal(bot_id=self.signal.bot_id, pair=self.strategy.pair, position=self.signal.position)

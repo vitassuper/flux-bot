@@ -40,7 +40,7 @@ class StrategyDBHelper:
         return await update_deal(deal_id=deal_id, pnl=pnl, date_close=datetime.now())
 
     async def get_deal(self) -> Deal:
-        return await get_deal(bot_id=self.bot_id, pair=self.pair)
+        return await get_deal(bot_id=self.bot_id, pair=self.pair, position=self.position)
 
     async def get_or_create_deal(self) -> Deal:
         return await get_or_create_deal(bot_id=self.bot_id, pair=self.pair)
