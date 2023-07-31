@@ -15,7 +15,6 @@ async def run(dispatcher):
     finally:
         # close DB connection
         await db.close()
-        print('dispose')
 
 
 def spawn_and_dispatch(signal):
