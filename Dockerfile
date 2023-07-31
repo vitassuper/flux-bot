@@ -8,4 +8,4 @@ RUN pip3 install -r requirements.txt
 WORKDIR /app
 COPY . .
 
-CMD ["python3", "main.py"]
+CMD python3 main.py 2>&1 | tee -a connector.log
