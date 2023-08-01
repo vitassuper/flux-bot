@@ -24,6 +24,11 @@ async def get_deal(bot_id: int, pair: str, position: Union[int, None] = None) ->
     return deal
 
 
+# TODO remove (it for debug)
+async def get_other_grid_deals(deal: Deal):
+    return await repository.get_other_grid_deals(deal)
+
+
 async def get_deal_by_id(deal_id: int) -> Deal:
     deal = await repository.get_deal_by_id(deal_id=deal_id)
 

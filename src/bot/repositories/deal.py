@@ -21,6 +21,19 @@ async def create_deal(bot_id: int, pair: str, date_open: datetime, position: Uni
         return deal
 
 
+# TODO remove (it for debug)
+async def get_other_grid_deals(deal: Deal):
+    async with DB().get_session() as session:
+        query = select(Deal).where(
+            and_(Deal.bot_id == deal.bot_id, Deal.pair == deal.pair, Deal.date_close.is_(None),
+                 Deal.id != deal.id)).order_by(
+            Deal.position.asc())
+
+        result = await session.execute(query)
+
+        return result.scalars().all()
+
+
 async def update_deal(deal_id: int, **update_values) -> Deal:
     async with DB().get_session() as session:
         deal = await session.get(Deal, deal_id)

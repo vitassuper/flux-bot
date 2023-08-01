@@ -14,6 +14,7 @@ from src.bot.objects.messages.averaged_deal_message import AveragedDealMessage
 from src.bot.objects.messages.closed_deal_message import ClosedDealMessage
 from src.bot.objects.messages.opened_deal_message import OpenedDealMessage
 from src.bot.objects.order import Order
+from src.bot.services.deal import get_other_grid_deals
 
 
 class BaseStrategy(metaclass=abc.ABCMeta):
@@ -54,7 +55,14 @@ class BaseStrategy(metaclass=abc.ABCMeta):
 
         deal = await self.db_helper.get_deal()
 
+        # TODO remove (it for debug)
+        positions_string = ''
+
+        if deal.position:
+            positions_string = ','.join([str(deal.position) for deal in await get_other_grid_deals(deal)])
+
         return OpenedDealMessage(
+            positions=positions_string,
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
             pair=self.pair,
             base_amount=0.1,  # TODO: remove magic number
@@ -87,7 +95,14 @@ class BaseStrategy(metaclass=abc.ABCMeta):
     async def close_deal(self, amount: float) -> ClosedDealMessage:
         closed_deal = await self.close_deal_process(amount=amount)
 
+        # TODO remove (it for debug)
+        positions_string = ''
+
+        if closed_deal.deal.position:
+            positions_string = ','.join([str(deal.position) for deal in await get_other_grid_deals(closed_deal.deal)])
+
         return ClosedDealMessage(
+            positions=positions_string,
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
             deal_id=closed_deal.deal.id,
             pair=self.pair,

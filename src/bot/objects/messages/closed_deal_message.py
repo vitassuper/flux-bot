@@ -9,6 +9,7 @@ class ClosedDealMessage(BaseDeal):
     duration: str
     profit: str
     profit_percentage: float
+    positions: str = ''
 
     def __str__(self):
         return (
@@ -18,4 +19,4 @@ class ClosedDealMessage(BaseDeal):
             f'Size: {self.quote_amount}$\n'
             f'Duration: {self.duration}\n'
             f'Safety orders: {self.safety_orders_count}'
-        )
+        ) + (f'\nPositions: {self.positions}' if self.positions else '')
