@@ -16,7 +16,7 @@ class TelegramNotifier(BaseNotifier):
 
     async def send_message(self):
         try:
-            text = f'{self.exchange_name}:\n{self.get_separator().join(self.stack)}'
+            text = f'{self.get_separator().join(self.stack)}'
 
             await self.bot.send_message(
                 chat_id=settings.TELEGRAM_CHAT_ID, text=text, parse_mode=ParseMode.HTML)

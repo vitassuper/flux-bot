@@ -9,8 +9,9 @@ from src.bot.exceptions import NotFoundException
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.bot import Bot
 from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
-from src.bot.services import get_bot, get_copy_bots
+from src.bot.services import get_bot, get_copy_bots, get_exchange
 from src.bot.singal_dispatcher_spawner import spawn_and_dispatch
+from src.bot.types.bot_side_type import BotSideType
 
 
 class SignalDispatcher:
@@ -21,9 +22,15 @@ class SignalDispatcher:
 
     async def dispatch(self):
         try:
+            bot_model = await get_bot(self.signal.bot_id)
+            exchange = await get_exchange(bot_model.exchange_id)
+
             self.notifier.add_message_to_stack(
-                f'Position: {self.signal.position}\n'
-                f'Received <b>{self.signal.type_of_signal}</b> signal: pair: {self.signal.pair}' + (
+                f'[<b>{self.signal.type_of_signal.capitalize()}</b>] '
+                f'Bot Id: {bot_model.id} ({exchange.type.capitalize()})'
+                f"{'🟥' if bot_model.side == BotSideType.short else '🟩'}\n"
+                f'Pos: {self.signal.position}\n'
+                f'{self.signal.pair}' + (
                     f' amount: {self.signal.amount}' if hasattr(self.signal, 'amount') else ''))
 
             bot_model = await get_bot(self.signal.bot_id)

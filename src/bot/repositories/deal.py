@@ -22,11 +22,10 @@ async def create_deal(bot_id: int, pair: str, date_open: datetime, position: Uni
 
 
 # TODO remove (it for debug)
-async def get_other_grid_deals(deal: Deal):
+async def get_all_grid_deals(deal: Deal):
     async with DB().get_session() as session:
         query = select(Deal).where(
-            and_(Deal.bot_id == deal.bot_id, Deal.pair == deal.pair, Deal.date_close.is_(None),
-                 Deal.id != deal.id)).order_by(
+            and_(Deal.bot_id == deal.bot_id, Deal.pair == deal.pair, Deal.date_close.is_(None))).order_by(
             Deal.position.asc())
 
         result = await session.execute(query)

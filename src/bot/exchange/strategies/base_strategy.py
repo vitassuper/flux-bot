@@ -14,7 +14,7 @@ from src.bot.objects.messages.averaged_deal_message import AveragedDealMessage
 from src.bot.objects.messages.closed_deal_message import ClosedDealMessage
 from src.bot.objects.messages.opened_deal_message import OpenedDealMessage
 from src.bot.objects.order import Order
-from src.bot.services.deal import get_other_grid_deals
+from src.bot.services.deal import get_all_grid_deals
 
 
 class BaseStrategy(metaclass=abc.ABCMeta):
@@ -59,7 +59,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         positions_string = ''
 
         if deal.position:
-            positions_string = ','.join([str(deal.position) for deal in await get_other_grid_deals(deal)])
+            positions_string = ','.join([str(deal.position) for deal in await get_all_grid_deals(deal)])
 
         return OpenedDealMessage(
             positions=positions_string,
@@ -99,7 +99,7 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         positions_string = ''
 
         if closed_deal.deal.position:
-            positions_string = ','.join([str(deal.position) for deal in await get_other_grid_deals(closed_deal.deal)])
+            positions_string = ','.join([str(deal.position) for deal in await get_all_grid_deals(closed_deal.deal)])
 
         return ClosedDealMessage(
             positions=positions_string,

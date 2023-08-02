@@ -12,7 +12,6 @@ class AveragedDealMessage(BaseDeal):
     def __str__(self):
         return (
             f'{super().__str__()}\n'
-            f'Averaged position, pair: {self.pair}, size: {self.quote_amount}$ '
-            f'safety orders: {self.safety_orders_count}\n'
+            f'Size: {self.quote_amount}$ (safety orders: {self.safety_orders_count})\n'
             f'Total amount: {self.total_quote_amount}$'
         )

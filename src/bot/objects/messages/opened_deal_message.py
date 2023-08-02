@@ -11,5 +11,5 @@ class OpenedDealMessage(BaseDeal):
     def __str__(self):
         return (
             f'{super().__str__()}\n'
-            f'Opened position: {self.pair}, size: {self.quote_amount}$'
+            f'Size: {self.quote_amount}$'
         ) + (f'\nPositions: {self.positions}' if self.positions else '')
