@@ -10,7 +10,7 @@ from src.bot.exchange.strategies.grid_strategy import GridStrategy
 from src.bot.models import Bot as BotModel
 from src.bot.repositories.bot import get_bot
 from src.bot.services import get_exchange
-from src.bot.services.deal import get_deal_by_id, get_deal
+from src.bot.services.deal import get_deal_by_id, get_deal, get_deal_or_fail
 from src.bot.types.bot_side_type import BotSideType
 from src.bot.types.margin_type import MarginType
 
@@ -55,13 +55,18 @@ class Bot:
         return f'Bot id: {self.bot.id} ({self.exchange.get_exchange_name()})'
 
     async def get_active_deal(self):
+        if self.signal.type_of_signal == 'open':
+            deal = await get_deal(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
+
+            if deal:
+                raise ConnectorException('Deal already exists')
+
+            return None
+
         if getattr(self.signal, 'deal_id', None):
             deal = await get_deal_by_id(deal_id=self.signal.deal_id)
         else:
-            deal = await get_deal(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
-
-        if self.signal.type_of_signal == 'open' and deal:
-            raise ConnectorException('Deal already exists')
+            deal = await get_deal_or_fail(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
 
         return deal
 

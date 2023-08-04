@@ -3,9 +3,10 @@ from decimal import Decimal
 from typing import Literal, Union
 
 from src.bot.models import Order, Deal
-from src.bot.services.deal import update_deal, get_deal, create_deal, increment_safety_orders_count, get_or_create_deal
-from src.bot.services.order import create_order, get_orders_volume, get_deal_stats
 from src.bot.objects.deal_stats import DealStats
+from src.bot.services.deal import update_deal, create_deal, increment_safety_orders_count, get_or_create_deal, \
+    get_deal_or_fail
+from src.bot.services.order import create_order, get_orders_volume, get_deal_stats
 from src.bot.types.order_side_type import OrderSideType
 from src.bot.types.side_type import SideType
 
@@ -40,7 +41,7 @@ class StrategyDBHelper:
         return await update_deal(deal_id=deal_id, pnl=pnl, date_close=datetime.now())
 
     async def get_deal(self) -> Deal:
-        return await get_deal(bot_id=self.bot_id, pair=self.pair, position=self.position)
+        return await get_deal_or_fail(bot_id=self.bot_id, pair=self.pair, position=self.position)
 
     async def get_or_create_deal(self) -> Deal:
         return await get_or_create_deal(bot_id=self.bot_id, pair=self.pair)

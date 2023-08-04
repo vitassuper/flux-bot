@@ -15,7 +15,11 @@ async def increment_safety_orders_count(deal_id: int) -> int:
 
 
 async def get_deal(bot_id: int, pair: str, position: Union[int, None] = None) -> Deal:
-    deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair, position=position)
+    return await repository.get_bot_last_deal(bot_id=bot_id, pair=pair, position=position)
+
+
+async def get_deal_or_fail(bot_id: int, pair: str, position: Union[int, None] = None) -> Deal:
+    deal = await get_deal(bot_id=bot_id, pair=pair, position=position)
 
     if not deal:
         raise NotFoundException(
