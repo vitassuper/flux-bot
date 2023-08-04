@@ -55,13 +55,15 @@ class Bot:
         return f'Bot id: {self.bot.id} ({self.exchange.get_exchange_name()})'
 
     async def get_active_deal(self):
-        if self.signal.type_of_signal == 'open':
-            return None
-
-        if self.signal.deal_id:
-            return await get_deal_by_id(deal_id=self.signal.deal_id)
+        if getattr(self.signal, 'deal_id', None):
+            deal = await get_deal_by_id(deal_id=self.signal.deal_id)
         else:
-            return await get_deal(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
+            deal = await get_deal(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
+
+        if self.signal.type_of_signal == 'open' and deal:
+            raise ConnectorException('Deal already exists')
+
+        return deal
 
     async def ensure_bot_enabled(self, bot: BotModel):
         deal = await self.get_active_deal()
