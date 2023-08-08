@@ -1,6 +1,5 @@
 from typing import Union
 
-from src.app.schemas import AddSignal, OpenSignal, CloseSignal
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.exchange_manager import ExchangeManager
 from src.bot.exchange.side.base_side import BaseSide
@@ -13,6 +12,7 @@ from src.bot.services import get_exchange
 from src.bot.services.deal import get_deal_by_id, get_deal, get_deal_or_fail
 from src.bot.types.bot_side_type import BotSideType
 from src.bot.types.margin_type import MarginType
+from src.schemas import AddSignal, OpenSignal, CloseSignal
 
 
 class Bot:

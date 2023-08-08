@@ -4,9 +4,9 @@ from typing import Union
 
 from sanic import HTTPResponse, Request, response, exceptions, SanicException
 
-from src.app.schemas import OpenSignal, CloseSignal, AddSignal
 from src.bot.singal_dispatcher_spawner import spawn_and_dispatch
 from src.core.config import settings
+from src.schemas import AddSignal, OpenSignal, CloseSignal
 
 
 def initialize_signal_object(data: dict) -> Union[AddSignal, OpenSignal, CloseSignal]:
@@ -61,6 +61,6 @@ async def handler(
     signal = initialize_signal_object(body)
     signal.position = remove_letters_and_convert_to_number(signal.position)
 
-    spawn_and_dispatch(signal)
+    await spawn_and_dispatch(signal)
 
     return response.empty()

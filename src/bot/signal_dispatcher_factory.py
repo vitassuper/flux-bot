@@ -1,12 +1,12 @@
+from importlib import import_module
 from typing import Union
 
-from src.app import schemas
-from importlib import import_module
+from src.schemas import AddSignal, OpenSignal, CloseSignal
 
 
 class SignalDispatcherFactory:
-    def create(self, signal: Union[schemas.AddSignal, schemas.OpenSignal, schemas.CloseSignal]):
+    @classmethod
+    async def create(cls, signal: Union[AddSignal, OpenSignal, CloseSignal]):
         signal_dispatcher_module = import_module("src.bot.signal_dispatcher")
 
-        return signal_dispatcher_module.SignalDispatcher(signal)
-
+        return await signal_dispatcher_module.SignalDispatcher.create(signal)
