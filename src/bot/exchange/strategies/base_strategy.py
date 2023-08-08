@@ -77,8 +77,16 @@ class BaseStrategy(metaclass=abc.ABCMeta):
         safety_count, quote_amount = await self.average_deal_process(base_amount=base_amount)
 
         deal_stats = await self.db_helper.get_deal_stats(deal_id=self.active_deal_model.id)
+        deal = await self.db_helper.get_deal()
+
+        # TODO remove (it for debug)
+        positions_string = ''
+
+        if deal.position:
+            positions_string = ','.join([str(deal.position) for deal in await get_all_grid_deals(deal)])
 
         return AveragedDealMessage(
+            positions=positions_string,
             title=f'Bot id: {self.bot_id} ({self.exchange.get_exchange_name()})',
             base_amount=0.1,  # TODO: remove magic number,
             deal_id=self.active_deal_model.id,
