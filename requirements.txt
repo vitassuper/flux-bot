@@ -2,7 +2,7 @@ sanic==23.6.0
 alembic==1.10.2
 SQLAlchemy==2.0.7
 psycopg2==2.9.5
-ccxt==2.9.16
+ccxt==4.0.58
 pydantic==1.10.6
 python-dotenv==1.0.0
 python-telegram-bot==20.1
