@@ -33,10 +33,15 @@ class Binance(BaseExchange):
 
         super().__init__(exchange=exchange)
 
-    def get_current_leverage(self, pair: str):
+    def get_current_leverage(self, pair: str, side: Union[SideType.long, SideType.short] = SideType.short):
         positions = self.ccxt_exchange.fetch_positions_risk([pair])
 
-        position = next((p for p in positions if p['info']['positionSide'] == 'BOTH'), None)
+        position_side = 'BOTH'
+
+        if self.hedge_mode:
+            position_side = side.upper()
+
+        position = next((p for p in positions if p['info']['positionSide'] == position_side), None)
 
         return position['leverage']
 
@@ -113,7 +118,7 @@ class Binance(BaseExchange):
     @retry_on_exception()
     def set_leverage_for_short_position(self, pair: str, leverage: int, margin_type: Union[
         MarginType.cross, MarginType.isolated] = MarginType.isolated) -> None:
-        current_leverage = self.get_current_leverage(pair=pair)
+        current_leverage = self.get_current_leverage(pair=pair, side=SideType.short)
 
         if current_leverage != leverage:
             self.ccxt_exchange.set_leverage(leverage, pair)
@@ -203,7 +208,7 @@ class Binance(BaseExchange):
     def set_leverage_for_long_position(self, pair: str, leverage: int,
                                        margin_type: Union[
                                            MarginType.cross, MarginType.isolated] = MarginType.isolated) -> None:
-        current_leverage = self.get_current_leverage(pair=pair)
+        current_leverage = self.get_current_leverage(pair=pair, side=SideType.long)
 
         if current_leverage != leverage:
             self.ccxt_exchange.set_leverage(leverage, pair)
