@@ -64,4 +64,4 @@ class SignalDispatcher:
             # TODO: fix bug related to copy signal where provided deal_id because 2 different bots cant have the same deal
             copy_signal.bot_id = copy_bot.id
 
-            await spawn_and_dispatch(copy_signal)
+            spawn_and_dispatch(copy_signal)

@@ -61,6 +61,6 @@ async def handler(
     signal = initialize_signal_object(body)
     signal.position = remove_letters_and_convert_to_number(signal.position)
 
-    await spawn_and_dispatch(signal)
+    spawn_and_dispatch(signal)
 
     return response.empty()
