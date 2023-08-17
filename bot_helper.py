@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 
-from src.bot.repositories.bot import create_bot
 from src.bot.utils.helper import Helper
 
 

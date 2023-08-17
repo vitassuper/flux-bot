@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from src.bot.objects.messages.base_deal_message import BaseDeal
 

@@ -38,7 +38,13 @@ async def run(signal: Union[AddSignal, OpenSignal, CloseSignal]):
         await notifier.send_message()
 
 
-def spawn_and_dispatch(signal: Union[AddSignal, OpenSignal, CloseSignal]):
+def thread_run(signal: Union[AddSignal, OpenSignal, CloseSignal]):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    Thread(target=loop.run_until_complete, args=[run(signal)]).start()
+    loop.run_until_complete(run(signal))
+    loop.close()
+
+
+def spawn_and_dispatch(signal: Union[AddSignal, OpenSignal, CloseSignal]):
+    thread = Thread(target=thread_run, args=[signal])
+    thread.start()

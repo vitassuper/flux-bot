@@ -11,7 +11,7 @@ def retry_on_exception(max_retries=3, wait_time=10):
             for i in range(max_retries):
                 try:
                     return func(*args, **kwargs)
-                except NetworkError as e:
+                except NetworkError:
                     time.sleep(wait_time)
             raise ConnectorException(f"Max retries ({max_retries}) reached.")
 
