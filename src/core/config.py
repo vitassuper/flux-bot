@@ -27,14 +27,9 @@ class Settings(BaseSettings):
     CONNECTOR_SECRET: Optional[str] = None
     TELEGRAM_BOT_TOKEN: str
 
-    API_KEY: str
-    API_SECRET: str
     API_PASSWORD: str
     TELEGRAM_CHAT_ID: str
     TELEGRAM_CHAT_ID2: str
-
-    API_KEY_BINANCE: str
-    API_SECRET_BINANCE: str
 
     APP_KEY: str
 

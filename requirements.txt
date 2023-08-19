@@ -1,9 +1,9 @@
 sanic==23.6.0
-alembic==1.10.2
-SQLAlchemy==2.0.7
-psycopg2==2.9.5
-ccxt==4.0.58
-pydantic==1.10.6
+alembic==1.12.0
+SQLAlchemy==2.0.21
+psycopg2==2.9.7
+ccxt==4.0.104
+pydantic==2.3.0
 python-dotenv==1.0.0
-python-telegram-bot==20.1
-asyncpg==0.27.0
+python-telegram-bot==20.5
+asyncpg==0.28.0

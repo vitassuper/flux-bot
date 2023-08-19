@@ -1,4 +1,5 @@
 from copy import deepcopy
+from importlib import import_module
 from typing import Union
 
 from src.bot.exceptions.connector_exception import ConnectorException
@@ -7,8 +8,7 @@ from src.bot.models import Bot as BotModel, Exchange
 from src.bot.objects.messages.averaged_deal_message import AveragedDealMessage
 from src.bot.objects.messages.closed_deal_message import ClosedDealMessage
 from src.bot.objects.messages.opened_deal_message import OpenedDealMessage
-from src.bot.services import get_bot, get_copy_bots, get_exchange
-from src.bot.singal_dispatcher_spawner import spawn_and_dispatch
+from src.bot.services import get_bot, get_exchange, get_copy_bots
 from src.schemas import AddSignal, OpenSignal, CloseSignal
 
 
@@ -63,5 +63,6 @@ class SignalDispatcher:
             copy_signal = deepcopy(self._signal)
             # TODO: fix bug related to copy signal where provided deal_id because 2 different bots cant have the same deal
             copy_signal.bot_id = copy_bot.id
+            signal_dispatcher_module = import_module("src.bot.singal_dispatcher_spawner")
 
-            spawn_and_dispatch(copy_signal)
+            signal_dispatcher_module.spawn_and_dispatch(copy_signal)
