@@ -6,10 +6,16 @@ from src.bot.types.side_type import SideType
 
 class LongSide(BaseSide):
     def ensure_deal_not_opened(self, pair: str) -> None:
-        self.exchange.ensure_long_position_not_opened(pair=pair)
+        open_position = self.exchange.get_opened_long_position(pair=pair)
+
+        if open_position:
+            raise ConnectorException(f'the specified position already exists on the exchange: {pair}')
 
     def ensure_deal_opened(self, pair: str) -> None:
-        self.exchange.ensure_long_position_opened(pair=pair)
+        open_position = self.exchange.get_opened_long_position(pair=pair)
+
+        if not open_position:
+            raise ConnectorException(f'the specified position does not exist on the exchange: {pair}')
 
     def set_leverage(self, pair: str, leverage: int):
         self.exchange.set_leverage_for_long_position(
@@ -36,7 +42,12 @@ class LongSide(BaseSide):
             pair=pair, amount=quote_amount)
 
     def get_opened_position(self, pair: str):
-        return self.exchange.get_opened_long_position(pair=pair)
+        open_position = self.exchange.get_opened_long_position(pair=pair)
+
+        if not open_position:
+            raise ConnectorException(f'the specified position does not exist on the exchange: {pair}')
+
+        return open_position
 
     def get_side_type(self):
         return SideType.long

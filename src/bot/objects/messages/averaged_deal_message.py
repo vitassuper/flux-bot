@@ -13,6 +13,7 @@ class AveragedDealMessage(BaseDeal):
     def __str__(self):
         return (
             f'{super().__str__()}\n'
-            f'Size: {self.quote_amount}$ (safety orders: {self.safety_orders_count})\n'
+            f'Size: {self.quote_amount}$ (safety orders: {self.safety_orders_count} '
+            f'{"🏆🏆🏆" if self.safety_orders_count == 7 else ""})\n'
             f'Total amount: {self.total_quote_amount}$'
         ) + (f'\nPositions: {self.positions}' if self.positions else '')

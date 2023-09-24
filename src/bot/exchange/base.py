@@ -1,7 +1,7 @@
 import abc
 import re
 from decimal import Decimal
-from typing import Union
+from typing import Union, Dict
 
 from src.bot.exchange.decorators import retry_on_exception
 from src.bot.types.margin_type import MarginType
@@ -16,22 +16,6 @@ class BaseExchange(metaclass=abc.ABCMeta):
     # Abstract methods
     @abc.abstractmethod
     def get_exchange_name(self):
-        pass
-
-    @abc.abstractmethod
-    def ensure_long_position_not_opened(self, pair: str) -> None:
-        pass
-
-    @abc.abstractmethod
-    def ensure_short_position_not_opened(self, pair: str) -> None:
-        pass
-
-    @abc.abstractmethod
-    def ensure_long_position_opened(self, pair: str) -> None:
-        pass
-
-    @abc.abstractmethod
-    def ensure_short_position_opened(self, pair: str) -> None:
         pass
 
     @abc.abstractmethod
@@ -82,11 +66,11 @@ class BaseExchange(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def get_opened_short_position(self, pair: str):
+    def get_opened_short_position(self, pair: str) -> Union[Dict, None]:
         pass
 
     @abc.abstractmethod
-    def get_opened_long_position(self, pair: str):
+    def get_opened_long_position(self, pair: str) -> Union[Dict, None]:
         pass
 
     # End Abstract methods

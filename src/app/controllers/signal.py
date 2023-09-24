@@ -2,6 +2,7 @@ import json
 import re
 from typing import Union
 
+from pydantic import ValidationError
 from sanic import HTTPResponse, Request, response, exceptions, SanicException
 
 from src.bot.singal_dispatcher_spawner import spawn_and_dispatch
@@ -58,7 +59,18 @@ async def handler(
     if body.get('connector_secret') != settings.CONNECTOR_SECRET:
         raise exceptions.Forbidden()
 
-    signal = initialize_signal_object(body)
+    try:
+        signal = initialize_signal_object(body)
+    except ValidationError as e:
+        error_messages = {}
+
+        for error in e.errors():
+            field_name = error['loc'][0]
+            error_message = error['msg']
+            error_messages[field_name] = error_message
+
+        return response.json(error_messages)
+
     signal.position = remove_letters_and_convert_to_number(signal.position)
 
     spawn_and_dispatch(signal)

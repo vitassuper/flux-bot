@@ -1,6 +1,8 @@
 from typing import Any, Dict, Optional
 
-from pydantic import BaseSettings, PostgresDsn, validator
+from pydantic import PostgresDsn, validator, field_validator
+from pydantic_core.core_schema import FieldValidationInfo
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -12,16 +14,16 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
 
-    @validator('SQLALCHEMY_DATABASE_URI', pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    @field_validator('SQLALCHEMY_DATABASE_URI', mode='before')
+    def assemble_db_connection(cls, v: Optional[str], values: FieldValidationInfo) -> Any:
         if isinstance(v, str):
             return v
         return PostgresDsn.build(
             scheme='postgresql+asyncpg',
-            user=values.get('POSTGRES_USER'),
-            password=values.get('POSTGRES_PASSWORD'),
-            host=values.get('POSTGRES_SERVER'),
-            path=f"/{values.get('POSTGRES_DB') or ''}",
+            username=values.data.get('POSTGRES_USER'),
+            password=values.data.get('POSTGRES_PASSWORD'),
+            host=values.data.get('POSTGRES_SERVER'),
+            path=values.data.get('POSTGRES_DB') or '',
         )
 
     CONNECTOR_SECRET: Optional[str] = None

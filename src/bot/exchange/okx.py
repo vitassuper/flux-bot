@@ -1,14 +1,13 @@
 from decimal import Decimal
-from typing import Union
+from typing import Union, Dict
 
 import ccxt
 
-from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.base import BaseExchange
+from src.bot.models import Exchange
 from src.bot.types.margin_type import MarginType
 from src.bot.types.side_type import SideType
 from src.core.config import settings
-from src.bot.models import Exchange
 
 
 class Okex(BaseExchange):
@@ -37,63 +36,17 @@ class Okex(BaseExchange):
 
         return int(leverage_info['lever'])
 
-    def get_opened_long_position(self, pair: str):
+    def get_opened_long_position(self, pair: str) -> Union[Dict, None]:
         positions = self.ccxt_exchange.fetch_positions()
 
-        open_position = next(
-            (p for p in positions if p['symbol'] == pair and p['side'] == SideType.long.value), None)
-
-        if not open_position:
-            raise ConnectorException('position not exists')
-
-        return open_position
-
-    def get_opened_short_position(self, pair: str):
-        positions = self.ccxt_exchange.fetch_positions()
-
-        open_position = next(
-            (p for p in positions if p['symbol'] == pair and p['side'] == SideType.short.value), None)
-
-        if not open_position:
-            raise ConnectorException('position not exists')
-
-        return open_position
-
-    def ensure_long_position_not_opened(self, pair: str) -> None:
-        positions = self.ccxt_exchange.fetch_positions()
-
-        open_position = next(
+        return next(
             (p for p in positions if p['symbol'] == pair and p['side'] == SideType.long), None)
 
-        if open_position:
-            raise ConnectorException(f'position already exists: {pair}')
-
-    def ensure_long_position_opened(self, pair: str) -> None:
+    def get_opened_short_position(self, pair: str) -> Union[Dict, None]:
         positions = self.ccxt_exchange.fetch_positions()
 
-        open_position = next(
-            (p for p in positions if p['symbol'] == pair and p['side'] == SideType.long), None)
-
-        if not open_position:
-            raise ConnectorException('position not exists')
-
-    def ensure_short_position_opened(self, pair: str):
-        positions = self.ccxt_exchange.fetch_positions()
-
-        open_position = next(
+        return next(
             (p for p in positions if p['symbol'] == pair and p['side'] == SideType.short), None)
-
-        if not open_position:
-            raise ConnectorException('position not exists')
-
-    def ensure_short_position_not_opened(self, pair: str):
-        positions = self.ccxt_exchange.fetch_positions()
-
-        open_position = next(
-            (p for p in positions if p['symbol'] == pair and p['side'] == SideType.short), None)
-
-        if open_position:
-            raise ConnectorException(f'position already exists: {pair}')
 
     def get_base_amount(self, pair: str, quote_amount: Decimal):
         market = self.ccxt_exchange.market(pair)

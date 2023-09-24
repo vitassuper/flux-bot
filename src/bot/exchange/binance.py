@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Union
+from typing import Union, Dict
 
 import ccxt
 
@@ -45,24 +45,6 @@ class Binance(BaseExchange):
 
         return position['leverage']
 
-    def ensure_long_position_not_opened(self, pair: str):
-        positions = self.ccxt_exchange.fetch_positions_risk([pair])
-
-        open_position = next(
-            (p for p in positions if p['contracts'] and p['side'] == SideType.long), None)
-
-        if open_position:
-            raise ConnectorException(f'position already exists: {pair}')
-
-    def ensure_long_position_opened(self, pair: str) -> None:
-        positions = self.ccxt_exchange.fetch_positions_risk([pair])
-
-        open_position = next(
-            (p for p in positions if p['contracts'] and p['side'] == SideType.long), None)
-
-        if not open_position:
-            raise ConnectorException(f'position not exists: {pair}')
-
     def add_margin_to_long_position(self, pair: str, amount: float):
         raise NotImplementedError('This function is not implemented yet.')
 
@@ -70,47 +52,17 @@ class Binance(BaseExchange):
         raise NotImplementedError('This function is not implemented yet.')
 
     @retry_on_exception()
-    def ensure_short_position_not_opened(self, pair: str) -> None:
+    def get_opened_short_position(self, pair: str) -> Union[Dict, None]:
         positions = self.ccxt_exchange.fetch_positions_risk([pair])
 
-        open_position = next(
+        return next(
             (p for p in positions if p['contracts'] and p['side'] == SideType.short), None)
 
-        if open_position:
-            raise ConnectorException(f'position already exists: {pair}')
-
-    @retry_on_exception()
-    def ensure_short_position_opened(self, pair: str) -> None:
+    def get_opened_long_position(self, pair: str) -> Union[Dict, None]:
         positions = self.ccxt_exchange.fetch_positions_risk([pair])
 
-        open_position = next(
-            (p for p in positions if p['contracts'] and p['side'] == SideType.short), None)
-
-        if not open_position:
-            raise ConnectorException(f'position not exists: {pair}')
-
-    @retry_on_exception()
-    def get_opened_short_position(self, pair: str):
-        positions = self.ccxt_exchange.fetch_positions_risk([pair])
-
-        open_position = next(
-            (p for p in positions if p['contracts'] and p['side'] == SideType.short), None)
-
-        if not open_position:
-            raise ConnectorException('position not exists')
-
-        return open_position
-
-    def get_opened_long_position(self, pair: str):
-        positions = self.ccxt_exchange.fetch_positions_risk([pair])
-
-        open_position = next(
+        return next(
             (p for p in positions if p['contracts'] and p['side'] == SideType.long), None)
-
-        if not open_position:
-            raise ConnectorException('position not exists')
-
-        return open_position
 
     def get_order_status(self, order, pair):
         return order

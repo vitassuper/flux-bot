@@ -11,7 +11,8 @@ class DB:
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls._instances, 'instance'):
             cls._instances.instance = super().__new__(cls, *args, **kwargs)
-            cls._instances.instance.engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
+            cls._instances.instance.engine = create_async_engine(str(settings.SQLALCHEMY_DATABASE_URI),
+                                                                 pool_pre_ping=True)
 
         return cls._instances.instance
 
