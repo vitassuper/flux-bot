@@ -1,0 +1,2 @@
+class DisabledException(Exception):
+    pass

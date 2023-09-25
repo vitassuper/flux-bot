@@ -34,9 +34,7 @@ async def get_all_grid_deals(deal: Deal):
 
 
 async def get_deal_by_id(deal_id: int) -> Deal:
-    deal = await repository.get_deal_by_id(deal_id=deal_id)
-
-    return deal
+    return await repository.get_deal_by_id(deal_id=deal_id)
 
 
 async def is_deal_exist(bot_id: int, pair: str) -> bool:

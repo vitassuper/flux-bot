@@ -1,15 +1,17 @@
 from typing import Union
 
+from src.bot.exceptions import NotFoundException
 from src.bot.exceptions.connector_exception import ConnectorException
+from src.bot.exceptions.disabled_exception import DisabledException
 from src.bot.exchange.exchange_manager import ExchangeManager
 from src.bot.exchange.side.base_side import BaseSide
 from src.bot.exchange.side.long_side import LongSide
 from src.bot.exchange.side.short_side import ShortSide
 from src.bot.exchange.strategies.grid_strategy import GridStrategy
-from src.bot.models import Bot as BotModel
+from src.bot.models import Bot as BotModel, Deal
 from src.bot.repositories.bot import get_bot
 from src.bot.services import get_exchange
-from src.bot.services.deal import get_deal_by_id, get_deal, get_deal_or_fail
+from src.bot.services.deal import get_deal_by_id, get_deal
 from src.bot.types.bot_side_type import BotSideType
 from src.bot.types.margin_type import MarginType
 from src.schemas import AddSignal, OpenSignal, CloseSignal
@@ -30,8 +32,14 @@ class Bot:
 
         self.exchange = await self.get_exchange(bot.exchange_id)
         self.pair = self.guess_symbol_from_tv(symbol=self.pair)
+        self.deal = await self.get_active_deal()
 
         await self.ensure_bot_enabled(bot=bot)
+
+        if self.is_open_signal() and self.deal:
+            raise ConnectorException('Deal already exists')
+        elif not self.is_open_signal() and not self.deal:
+            raise NotFoundException('The deal with this id does not exist in the system')
 
         self.margin_type = MarginType.cross
 
@@ -54,33 +62,20 @@ class Bot:
     def get_bot_name(self):
         return f'Bot id: {self.bot.id} ({self.exchange.get_exchange_name()})'
 
-    async def get_active_deal(self):
-        if self.signal.type_of_signal == 'open':
-            deal = await get_deal(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
-
-            if deal:
-                raise ConnectorException('Deal already exists')
-
-            return None
-
+    async def get_active_deal(self) -> Union[Deal, None]:
         if getattr(self.signal, 'deal_id', None):
-            deal = await get_deal_by_id(deal_id=self.signal.deal_id)
-        else:
-            deal = await get_deal_or_fail(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
+            return await get_deal_by_id(deal_id=self.signal.deal_id)
 
-        return deal
+        return await get_deal(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
 
     async def ensure_bot_enabled(self, bot: BotModel):
-        deal = await self.get_active_deal()
-
-        if not bot.enabled:
-            if self.signal.type_of_signal == 'open':
-                raise ConnectorException('Bot disabled')
-            elif self.signal.type_of_signal == 'add' and not deal:
-                raise ConnectorException('Bot disabled')
-            elif self.signal.type_of_signal == 'close' and not deal:
-                raise ConnectorException('Bot disabled')
+        if not bot.enabled and (self.is_open_signal() or
+                                (self.signal.type_of_signal in ['add', 'close'] and not self.deal)):
+            raise DisabledException()
 
     # TODO: temp solution
     def guess_symbol_from_tv(self, symbol: str):
         return self.exchange.guess_symbol_from_tv(symbol=symbol)
+
+    def is_open_signal(self):
+        return self.signal.type_of_signal == 'open'

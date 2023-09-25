@@ -6,7 +6,9 @@ from typing import Union
 import ccxt
 
 from src.bot.exceptions import ConnectorException, NotFoundException
+from src.bot.exceptions.disabled_exception import DisabledException
 from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
+from src.bot.objects.messages.disabled_message import DisabledMessage
 from src.bot.objects.messages.error_message import ErrorMessage
 from src.bot.objects.messages.signal_message import SignalMessage
 from src.bot.signal_dispatcher_factory import SignalDispatcherFactory
@@ -28,8 +30,10 @@ async def run(signal: Union[AddSignal, OpenSignal, CloseSignal]):
 
     except (ConnectorException, NotFoundException, ccxt.BaseError) as e:
         notifier.add_message_to_stack(str(ErrorMessage(signal, e)))
-
         traceback.print_tb(e.__traceback__)
+
+    except DisabledException as e:
+        notifier.add_message_to_stack(str(DisabledMessage()))
 
     finally:
         # close DB connection
