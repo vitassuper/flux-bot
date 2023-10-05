@@ -14,13 +14,11 @@ from src.bot.services import get_exchange
 from src.bot.services.deal import get_deal_by_id, get_deal
 from src.bot.types.bot_side_type import BotSideType
 from src.bot.types.margin_type import MarginType
-from src.schemas import AddSignal, OpenSignal, CloseSignal
+from src.schemas import Signal
 
 
 class Bot:
-    def __init__(
-        self, bot: BotModel, signal: Union[AddSignal, OpenSignal, CloseSignal]
-    ) -> None:
+    def __init__(self, bot: BotModel, signal: Signal) -> None:
         self.margin_type = None
         self.exchange = None
         self.signal = signal

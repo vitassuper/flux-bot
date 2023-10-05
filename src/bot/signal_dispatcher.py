@@ -4,7 +4,7 @@ from typing import Union
 
 from ccxt import BaseError
 
-from src.bot.exceptions import NotFoundException, BaseConnectorException
+from src.bot.exceptions import BaseConnectorException
 from src.bot.exceptions.connector_exception import ConnectorException
 from src.bot.exchange.bot import Bot
 from src.bot.models import Bot as BotModel, Exchange
@@ -12,13 +12,13 @@ from src.bot.objects.messages.averaged_deal_message import AveragedDealMessage
 from src.bot.objects.messages.closed_deal_message import ClosedDealMessage
 from src.bot.objects.messages.opened_deal_message import OpenedDealMessage
 from src.bot.services import get_bot, get_exchange, get_copy_bots
-from src.schemas import AddSignal, OpenSignal, CloseSignal
+from src.schemas import Signal
 
 
 class SignalDispatcher:
     def __init__(
         self,
-        signal: Union[AddSignal, OpenSignal, CloseSignal],
+        signal: Signal,
         bot: BotModel,
         exchange: Exchange,
     ):
@@ -35,7 +35,7 @@ class SignalDispatcher:
         return self._exchange
 
     @classmethod
-    async def create(cls, signal: Union[AddSignal, OpenSignal, CloseSignal]):
+    async def create(cls, signal: Signal):
         bot = await get_bot(signal.bot_id)
         exchange = await get_exchange(bot.exchange_id)
 

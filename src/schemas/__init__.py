@@ -1,1 +1,1 @@
-from .signal import AddSignal, OpenSignal, CloseSignal
+from .signal import Signal
