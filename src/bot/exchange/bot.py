@@ -18,7 +18,9 @@ from src.schemas import AddSignal, OpenSignal, CloseSignal
 
 
 class Bot:
-    def __init__(self, bot: BotModel, signal: Union[AddSignal, OpenSignal, CloseSignal]) -> None:
+    def __init__(
+        self, bot: BotModel, signal: Union[AddSignal, OpenSignal, CloseSignal]
+    ) -> None:
         self.margin_type = None
         self.exchange = None
         self.signal = signal
@@ -37,9 +39,9 @@ class Bot:
         await self.ensure_bot_enabled(bot=bot)
 
         if self.is_open_signal() and self.deal:
-            raise ConnectorException('Deal already exists')
+            raise ConnectorException("Deal already exists")
         elif not self.is_open_signal() and not self.deal:
-            raise NotFoundException('The deal with this id does not exist in the system')
+            raise NotFoundException("deal")
 
         self.margin_type = MarginType.cross
 
@@ -56,21 +58,30 @@ class Bot:
         return LongSide(exchange=self.exchange, margin_type=self.margin_type)
 
     async def get_strategy(self, side: BaseSide):
-        return GridStrategy(bot_id=self.bot.id, side=side, pair=self.pair, position=self.position,
-                            deal=await self.get_active_deal())
+        return GridStrategy(
+            bot_id=self.bot.id,
+            side=side,
+            pair=self.pair,
+            position=self.position,
+            deal=await self.get_active_deal(),
+        )
 
     def get_bot_name(self):
-        return f'Bot id: {self.bot.id} ({self.exchange.get_exchange_name()})'
+        return f"Bot id: {self.bot.id} ({self.exchange.get_exchange_name()})"
 
     async def get_active_deal(self) -> Union[Deal, None]:
-        if getattr(self.signal, 'deal_id', None):
+        if getattr(self.signal, "deal_id", None):
             return await get_deal_by_id(deal_id=self.signal.deal_id)
 
-        return await get_deal(bot_id=self.bot.id, pair=self.pair, position=self.signal.position)
+        return await get_deal(
+            bot_id=self.bot.id, pair=self.pair, position=self.signal.position
+        )
 
     async def ensure_bot_enabled(self, bot: BotModel):
-        if not bot.enabled and (self.is_open_signal() or
-                                (self.signal.type_of_signal in ['add', 'close'] and not self.deal)):
+        if not bot.enabled and (
+            self.is_open_signal()
+            or (self.signal.type_of_signal in ["add", "close"] and not self.deal)
+        ):
             raise DisabledException()
 
     # TODO: temp solution
@@ -78,4 +89,4 @@ class Bot:
         return self.exchange.guess_symbol_from_tv(symbol=symbol)
 
     def is_open_signal(self):
-        return self.signal.type_of_signal == 'open'
+        return self.signal.type_of_signal == "open"

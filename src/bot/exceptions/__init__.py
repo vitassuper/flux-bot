@@ -1,2 +1,4 @@
 from .connector_exception import ConnectorException
 from .not_found_exception import NotFoundException
+from .secret_exception import SecretException
+from .base_exception import BaseConnectorException

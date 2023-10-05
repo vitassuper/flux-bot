@@ -9,8 +9,7 @@ async def get_bot(bot_id: int) -> Bot:
     bot = await repository.get_bot(bot_id=bot_id)
 
     if not bot:
-        raise NotFoundException(
-            'The bot with this id does not exist in the system')
+        raise NotFoundException("bot")
 
     return bot
 

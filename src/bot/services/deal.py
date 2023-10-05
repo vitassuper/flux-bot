@@ -6,8 +6,12 @@ from src.bot.repositories import deal as repository
 from src.bot.exceptions.not_found_exception import NotFoundException
 
 
-async def create_deal(bot_id: int, pair: str, date_open: datetime, position: Union[int, None] = None) -> Deal:
-    return await repository.create_deal(bot_id=bot_id, pair=pair, date_open=date_open, position=position)
+async def create_deal(
+    bot_id: int, pair: str, date_open: datetime, position: Union[int, None] = None
+) -> Deal:
+    return await repository.create_deal(
+        bot_id=bot_id, pair=pair, date_open=date_open, position=position
+    )
 
 
 async def increment_safety_orders_count(deal_id: int) -> int:
@@ -15,15 +19,18 @@ async def increment_safety_orders_count(deal_id: int) -> int:
 
 
 async def get_deal(bot_id: int, pair: str, position: Union[int, None] = None) -> Deal:
-    return await repository.get_bot_last_deal(bot_id=bot_id, pair=pair, position=position)
+    return await repository.get_bot_last_deal(
+        bot_id=bot_id, pair=pair, position=position
+    )
 
 
-async def get_deal_or_fail(bot_id: int, pair: str, position: Union[int, None] = None) -> Deal:
+async def get_deal_or_fail(
+    bot_id: int, pair: str, position: Union[int, None] = None
+) -> Deal:
     deal = await get_deal(bot_id=bot_id, pair=pair, position=position)
 
     if not deal:
-        raise NotFoundException(
-            'The deal with this id does not exist in the system')
+        raise NotFoundException("deal")
 
     return deal
 
@@ -47,7 +54,9 @@ async def get_or_create_deal(bot_id: int, pair: str) -> Deal:
     deal = await repository.get_bot_last_deal(bot_id=bot_id, pair=pair)
 
     if not deal:
-        deal = await repository.create_deal(bot_id=bot_id, pair=pair, date_open=datetime.now())
+        deal = await repository.create_deal(
+            bot_id=bot_id, pair=pair, date_open=datetime.now()
+        )
 
     return deal
 
@@ -70,7 +79,6 @@ async def update_deal(deal_id: int, date_close: datetime, pnl: float) -> Deal:
     deal = await repository.update_deal(deal_id=deal_id, date_close=date_close, pnl=pnl)
 
     if not deal:
-        raise NotFoundException(
-            'The deal with this id does not exist in the system')
+        raise NotFoundException("deal")
 
     return deal
