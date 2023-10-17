@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-from src.bot.models import Deal
+from src.db.models import Deal
 
 
 @dataclass

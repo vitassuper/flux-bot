@@ -4,9 +4,9 @@ from typing import List
 
 from cryptography.fernet import Fernet
 
-from src.bot.models import Order
+from src.db.models import Order
 from src.bot.exceptions import ConnectorException
-from src.core.config import settings
+from src.config import settings
 
 
 class Helper:
@@ -16,7 +16,7 @@ class Helper:
         total_value = sum(order.price * order.volume for order in orders)
 
         if total_volume == 0:
-            raise ConnectorException('Total volume cant be zero')
+            raise ConnectorException("Total volume cant be zero")
 
         return total_value / total_volume
 
@@ -29,8 +29,14 @@ class Helper:
         return sum(order.volume * order.price for order in orders)
 
     @staticmethod
-    def calculate_realized_pnl(volume: Decimal, avg_price: Decimal, close_volume: Decimal, close_avg_price: Decimal,
-                               fee: Decimal, sign: int):
+    def calculate_realized_pnl(
+        volume: Decimal,
+        avg_price: Decimal,
+        close_volume: Decimal,
+        close_avg_price: Decimal,
+        fee: Decimal,
+        sign: int,
+    ):
         entry_sum = volume * avg_price
         exit_sum = close_volume * close_avg_price
 
@@ -46,11 +52,11 @@ class Helper:
         key = base64.urlsafe_b64decode(settings.APP_KEY)
         cipher_suite = Fernet(key)
 
-        return cipher_suite.encrypt(string.encode('utf-8')).decode('utf-8')
+        return cipher_suite.encrypt(string.encode("utf-8")).decode("utf-8")
 
     @staticmethod
     def decrypt_string(string: str) -> str:
         key = base64.urlsafe_b64decode(settings.APP_KEY)
         cipher_suite = Fernet(key)
 
-        return cipher_suite.decrypt(string.encode('utf-8')).decode('utf-8')
+        return cipher_suite.decrypt(string.encode("utf-8")).decode("utf-8")

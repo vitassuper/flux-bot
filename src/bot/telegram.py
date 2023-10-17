@@ -10,32 +10,33 @@ from telegram.ext import (
 )
 from telegram.ext._utils.types import HandlerCallback
 
-from src.bot.services.deal import get_daily_pnl, get_total_pnl
-from src.bot.exchange.async_exchange.async_base import BaseExchange
-from src.bot.exchange.async_exchange.async_binance import Binance
-from src.bot.exchange.async_exchange.async_okx import Okex
+from src.bot.async_exchanges.async_base import BaseExchange
+from src.bot.async_exchanges.async_binance import Binance
+from src.db.services.deal import get_daily_pnl, get_total_pnl
+from src.bot.async_exchanges.async_okx import Okex
 from src.bot.objects.messages.active_deal_message import ActiveDealMessage
-from src.core.config import settings
+from src.config import settings
 
 
 class Telegram:
-    keyboard_keys: List[Dict[str, Union[str, HandlerCallback[Update, CallbackContext, None]]]] = []
+    keyboard_keys: List[
+        Dict[str, Union[str, HandlerCallback[Update, CallbackContext, None]]]
+    ] = []
 
     @classmethod
     def initialize(cls):
         cls.keyboard_keys = [
-            {'name': 'start', 'handler': cls.start_handler},
-            {'name': '^Get positions$', 'handler': cls.positions_handler},
-            {'name': '^Get stats$', 'handler': cls.stats_handler}
+            {"name": "start", "handler": cls.start_handler},
+            {"name": "^Get positions$", "handler": cls.positions_handler},
+            {"name": "^Get stats$", "handler": cls.stats_handler},
         ]
 
     @staticmethod
     async def start_handler(update: Update, context: CallbackContext) -> None:
-        keyboard = [
-            [KeyboardButton('Get positions'), KeyboardButton('Get stats')]]
+        keyboard = [[KeyboardButton("Get positions"), KeyboardButton("Get stats")]]
 
         await update.message.reply_text(
-            'Choose a command',
+            "Choose a command",
             reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
         )
 
@@ -45,18 +46,17 @@ class Telegram:
         daily_png = await get_daily_pnl()
 
         await update.message.reply_text(
-            f'Daily PNL: {daily_png}\n'
-            f'Total PNL: {total_pnl}'
+            f"Daily PNL: {daily_png}\n" f"Total PNL: {total_pnl}"
         )
 
     @staticmethod
     async def positions_handler(update: Update, context: CallbackContext) -> None:
         exchanges = await get_all_positions()
 
-        text = ''
+        text = ""
 
         for positions in exchanges:
-            text += f'{positions}\n'
+            text += f"{positions}\n"
 
         await update.message.reply_text(text)
 
@@ -69,10 +69,10 @@ class Telegram:
 
         for command in self.keyboard_keys:
             application.add_handler(
-                MessageHandler(filters.Regex(command['name']), command['handler']))
+                MessageHandler(filters.Regex(command["name"]), command["handler"])
+            )
 
-        application.run_polling(
-            allowed_updates=Update.ALL_TYPES, stop_signals=[])
+        application.run_polling(allowed_updates=Update.ALL_TYPES, stop_signals=[])
 
 
 def run():
@@ -80,15 +80,15 @@ def run():
 
 
 async def get_from_exchange(exchange: BaseExchange):
-    text = f'{exchange.get_exchange_name()}:\n\n'
+    text = f"{exchange.get_exchange_name()}:\n\n"
 
     positions: List[ActiveDealMessage] = await exchange.get_open_positions_info()
 
     if not positions:
-        return text + 'No positions'
+        return text + "No positions"
 
     for position in positions:
-        text += str(position) + '\n'
+        text += str(position) + "\n"
 
     return text
 

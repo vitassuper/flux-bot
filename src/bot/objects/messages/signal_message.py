@@ -1,4 +1,4 @@
-from src.bot.models import Exchange, Bot
+from src.db.models import Exchange, Bot
 from src.bot.types.bot_side_type import BotSideType
 from src.schemas import Signal
 

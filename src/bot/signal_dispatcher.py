@@ -6,12 +6,12 @@ from ccxt import BaseError
 
 from src.bot.exceptions import BaseConnectorException
 from src.bot.exceptions.connector_exception import ConnectorException
-from src.bot.exchange.bot import Bot
-from src.bot.models import Bot as BotModel, Exchange
+from src.bot.bot import Bot
+from src.db.models import Bot as BotModel, Exchange
 from src.bot.objects.messages.averaged_deal_message import AveragedDealMessage
 from src.bot.objects.messages.closed_deal_message import ClosedDealMessage
 from src.bot.objects.messages.opened_deal_message import OpenedDealMessage
-from src.bot.services import get_bot, get_exchange, get_copy_bots
+from src.db.services import get_bot, get_exchange, get_copy_bots
 from src.schemas import Signal
 
 

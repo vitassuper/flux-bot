@@ -1,66 +1,83 @@
-# TradingView Signal Request
+# TradingView Signal Request API Blueprint
+
+## Description
+
+This API allows you to send trading signals to the TradingView platform.
 
 ## Parameters
 
-- **type_of_signal**: type of tv signal (can be: `open`, `close`, `add`) (required)
-- **connector_secret**: secret token for validation request (required)
-- **pair**: pair of position (e.g. `ICP-USDT-SWAP`) (required)
-- **amount**: quote amount for position (only required for `open` and `add` signals)
+- `type_of_signal` (string, required): Type of trading signal. Valid values: `open`, `close`, `add`.
+- `connector_secret` (string, required): Secret token for request validation.
+- `pair` (string, required): Trading pair, e.g., `ICP-USDT-SWAP`.
+- `amount` (float, required for `open` and `add` signals): Quote amount for the trading position.
+- `position` (string | number, optional): An optional parameter to specify the position.
 
-## Examples
+## Actions
 
-### Open Position
+### Send an Open Signal
 
-```yaml
-type_of_signal: open
-connector_secret: abc123
-pair: ICP-USDT-SWAP
-amount: 1000
-```
+Send a new trading signal to open new position.
 
-### Add to Position
+- Request:
+    - Method: `POST`
+    - URL: `/api/v1/signal`
 
-```yaml
-type_of_signal: add
-connector_secret: abc123
-pair: ICP-USDT-SWAP
-amount: 500
-```
+- Request Body (JSON):
+    ```json
+    {
+        "type_of_signal": "open",
+        "connector_secret": "abc123",
+        "pair": "ICP-USDT-SWAP",
+        "amount": 1000
+    }
+    ```
 
-### Close Position
+- Response (204 No Content):
 
-```yaml
-type_of_signal: close
-connector_secret: abc123
-pair: ICP-USDT-SWAP
-```
+### Send an Add Signal
 
-## Usage
+Send a signal to adjust an existing position.
 
-```bash
-# Build with docker-compose:
-make build
+- Request:
+    - Method: `POST`
+    - URL: `/api/v1/signal`
 
-# Run with docker-compose in detach mode:
-make run
+- Request Body (JSON):
+    ```json
+    {
+        "type_of_signal": "add",
+        "connector_secret": "abc123",
+        "pair": "ICP-USDT-SWAP",
+        "amount": 500
+    }
+    ```
 
-# Run with docker-compose:
-make runb
+- Response (204 No Content):
 
-# Dive into the container:
-make exec
+### Send a Close Signal
 
-# Stop the container:
-make stop
+Send a signal to close an existing position.
 
-# Run locally with poetry:
-make run-poetry
+- Request:
+    - Method: `POST`
+    - URL: `/api/v1/signal`
 
-# Format code with black:
-make format
-```
+- Request Body (JSON):
+    ```json
+    {
+        "type_of_signal": "close",
+        "connector_secret": "abc123",
+        "pair": "ICP-USDT-SWAP"
+    }
+    ```
+
+- Response (204 No Content):
+
+## To-Do
+
+- Fix the bug: `corrupted size vs. prev_size while consolidating`
 
 ## Credits
 
-- [Vitaliy Klychkov](https://github.com/vitassuper) - the greatest financial wheeler-dealer
-- [Mykola Symon](https://github.com/andinoriel) - compote manufacturer
+- [Vitaliy Klychkov](https://github.com/vitassuper) - Project Creator
+- [Mykola Symon](https://github.com/andinoriel) - Docker Configuration Specialist

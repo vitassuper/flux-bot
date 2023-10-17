@@ -2,17 +2,18 @@ import threading
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from src.core.config import settings
+from src.config import settings
 
 
 class DB:
     _instances = threading.local()
 
     def __new__(cls, *args, **kwargs):
-        if not hasattr(cls._instances, 'instance'):
+        if not hasattr(cls._instances, "instance"):
             cls._instances.instance = super().__new__(cls, *args, **kwargs)
-            cls._instances.instance.engine = create_async_engine(str(settings.SQLALCHEMY_DATABASE_URI),
-                                                                 pool_pre_ping=True)
+            cls._instances.instance.engine = create_async_engine(
+                str(settings.SQLALCHEMY_DATABASE_URI), pool_pre_ping=True
+            )
 
         return cls._instances.instance
 

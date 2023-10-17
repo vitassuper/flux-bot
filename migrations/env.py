@@ -7,8 +7,8 @@ from sqlalchemy import engine_from_config, pool
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.bot.models.base import Base
-from src.core.config import settings
+from src.db.models import Base
+from src.config import settings
 
 config = context.config
 
@@ -33,7 +33,7 @@ def get_url():
     password = settings.POSTGRES_PASSWORD
     server = settings.POSTGRES_SERVER
     db = settings.POSTGRES_DB
-    return f'postgresql://{user}:{password}@{server}/{db}'
+    return f"postgresql://{user}:{password}@{server}/{db}"
 
 
 def run_migrations_offline():
@@ -65,9 +65,11 @@ def run_migrations_online():
 
     """
     configuration = config.get_section(config.config_ini_section)
-    configuration['sqlalchemy.url'] = get_url()
+    configuration["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
-        configuration, prefix='sqlalchemy.', poolclass=pool.NullPool,
+        configuration,
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:

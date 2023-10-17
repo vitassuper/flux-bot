@@ -11,12 +11,12 @@ from src.bot.exceptions import SecretException, ConnectorException
 from src.bot.exceptions.base_exception import BaseConnectorException
 from src.bot.exceptions.disabled_exception import DisabledException
 from src.bot.exceptions.json_decode_exception import JsonDecodeException
-from src.bot.exchange.notifiers.telegram_notifier import TelegramNotifier
+from src.bot.notifiers.telegram_notifier import TelegramNotifier
 from src.bot.objects.messages.error_message import ErrorMessage
 from src.bot.objects.messages.signal_message import SignalMessage
 from src.bot.objects.messages.warning_message import WarningMessage
 from src.bot.signal_dispatcher import SignalDispatcher
-from src.core.config import settings
+from src.config import settings
 from src.db.session import DB
 from src.schemas import Signal
 
